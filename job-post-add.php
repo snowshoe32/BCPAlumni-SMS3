@@ -23,7 +23,7 @@ if (isset($_POST['submit'])) {
   
     
     // SQL statement
-    $sql = "INSERT INTO `job_db` (`jobtitle`, `location`, `description`, `qualification`, `image`, `email`, `salary`)
+    $sql = "INSERT INTO `bcp-sms3_job` (`jobtitle`, `location`, `description`, `qualification`, `image`, `email`, `salary`)
             VALUES ('$jobtitle', '$location', '$description', '$qualification', '$image', '$email', '$salary')";
 
     // Execute the query
@@ -248,7 +248,7 @@ if (isset($result) && $result) {
       </a>
     </li>
     <li>
-      <a href="job-post-add.php">
+      <a href="job-post-add.php" class="active">
         <i class="bi bi-circle"></i><span>Add Job Posting</span>
       </a>
     </li>

@@ -10,14 +10,14 @@ if (isset($_POST['submit'])) {
     $user_type = mysqli_real_escape_string($conn, $_POST['user_type']);
 
     // Check if user already exists
-    $check_email = "SELECT * FROM `user_db` WHERE email = '$email'";
+    $check_email = "SELECT * FROM `bcp-sms3_user` WHERE email = '$email'";
     $result = mysqli_query($conn, $check_email);
 
     if (mysqli_num_rows($result) > 0) {
         $error[] = 'This Email is already registered!';
     } else {
         
-        $sql = "INSERT INTO `user_db` (`name`, `email`, `username`, `password`, `user_type`) 
+        $sql = "INSERT INTO `bcp-sms3_user` (`name`, `email`, `username`, `password`, `user_type`) 
                 VALUES ('$name', '$email', '$username', '$password', '$user_type')";
 
         

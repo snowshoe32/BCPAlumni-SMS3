@@ -1,6 +1,15 @@
 <?php
-include "db_conn.php";
+session_start();
+include 'db_conn.php';
 $id = $_GET['id']; 
+
+// Check if the user is logged in
+if (!isset($_SESSION['admin_name'])) {
+    header('Location: login_form.php');
+    exit();
+}
+
+$admin_name = $_SESSION['admin_name'];
 
 if (isset($_POST['submit'])) {
     // Sanitize user inputs
@@ -15,7 +24,7 @@ if (isset($_POST['submit'])) {
   
     
     // SQL statement
-    $sql = "UPDATE `crud` SET `student_no`='$student_no',`lname`='$lname', `mname`='$mname', `fname`='$fname',
+    $sql = "UPDATE `bcp-sms3_alumnidata` SET `student_no`='$student_no',`lname`='$lname', `mname`='$mname', `fname`='$fname',
     `gender`='$gender',`email`='$email',`contact`='$contact',`birthdate`='$birthdate' WHERE id=$id";
 
     // Execute the query
@@ -27,6 +36,18 @@ if (isset($_POST['submit'])) {
         echo "Failed: " . mysqli_error($conn); // Display error message
     } 
 }
+
+if ($result) {
+  if (mysqli_num_rows($result) > 0) {
+      $row = mysqli_fetch_array($result);
+      // Other logic for the admin dashboard
+  } else {
+      echo "No admin found with the username: " . htmlspecialchars($admin_name);
+  }
+} else {
+  echo "MySQL Error: " . mysqli_error($conn);
+}
+
 ?>
 
 
@@ -81,12 +102,12 @@ if (isset($_POST['submit'])) {
 
           <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
             <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-            <span class="d-none d-md-block dropdown-toggle ps-2">K. Anderson</span>
+            <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $_SESSION['admin_name'] ?></span>
           </a><!-- End Profile Iamge Icon -->
 
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
             <li class="dropdown-header">
-              <h6>Kevin Anderson</h6>
+              <h6><?php echo $_SESSION['admin_name'] ?></h6>
               <span>Web Designer</span>
             </li>
             <li>
@@ -155,7 +176,7 @@ if (isset($_POST['submit'])) {
         </div>
         <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; text-align: center;">
             <div style="font-weight: 500; color: #fff;">
-                Name
+            <?php echo $_SESSION['admin_name'] ?>
             </div>
             <div style="margin-top: 4px; font-size: 14px; color: #fff;">
                 ID
@@ -171,6 +192,7 @@ if (isset($_POST['submit'])) {
           <span>Dashboard</span>
         </a>
       </li><!-- End Dashboard Nav -->
+      <hr class="sidebar-divider">
 
       <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#system-nav" data-bs-toggle="collapse" href="#">
@@ -178,12 +200,12 @@ if (isset($_POST['submit'])) {
   </a>
   <ul id="system-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
     <li>
-      <a href="student-data.php">
+      <a href="student-data.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Alumni Data</span>
       </a>
     </li> 
     <li>
-      <a href="add.php">
+      <a href="add.php" >
         <i class="bi bi-circle"></i><span>Add new Alumni</span>
       </a>
     </li>
@@ -515,7 +537,7 @@ if (!$conn) {
 }
 
 
-$sql = "SELECT * FROM `crud` WHERE `id` = '$id'";
+$sql = "SELECT * FROM `bcp-sms3_alumnidata` WHERE `id` = '$id'";
 $result = mysqli_query($conn, $sql);
 
 if ($result) {

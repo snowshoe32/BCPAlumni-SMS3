@@ -286,7 +286,7 @@ if (isset($result) && $result) {
   </a>
   <ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="event-data.php">
+      <a href="event-data.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Job Posting</span>
       </a>
     </li>
@@ -664,7 +664,7 @@ if (isset($result) && $result) {
   <tbody>
     <?php
     include "db_conn.php";
-    $sql = "SELECT * FROM `job_db`";
+    $sql = "SELECT * FROM `bcp-sms3_job`";
     $result = mysqli_query($conn, $sql);
     while ($row = mysqli_fetch_assoc($result)){ 
      
@@ -675,7 +675,7 @@ if (isset($result) && $result) {
       <td><?php echo $row['jobtitle'] ?></td> 
       <td><?php echo $row['location'] ?></td>
       <td><?php echo $row['email'] ?></td>   
-      <td><?php echo $row['salary'] ?></td>
+      <td>₱<?php echo $row['salary'] ?></td>
       <td>
       <a href="job-post-view.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
         <a href="job-post-edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>

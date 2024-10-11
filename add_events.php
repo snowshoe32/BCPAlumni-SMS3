@@ -29,7 +29,7 @@ if (isset($_POST['submit'])) {
     $eventEndDateTime = $end_date . ' ' . $end_time;
 
   
-    $sql = "INSERT INTO `event_db` (`title`, `location`, `start_date`, `end_date`, `start_time`, `end_time`, `description`, `status`, `organizer`, `organizer_no`, `organizer_email`) 
+    $sql = "INSERT INTO `bcp-sms3_events` (`title`, `location`, `start_date`, `end_date`, `start_time`, `end_time`, `description`, `status`, `organizer`, `organizer_no`, `organizer_email`) 
             VALUES ('$title', '$location', '$eventStartDateTime', '$eventEndDateTime', '$start_time', '$end_time', '$description', '$status', '$organizer', '$organizer_no', '$organizer_email')";
 
     
@@ -235,7 +235,7 @@ if (isset($result) && $result) {
   </a>
   <ul id="events-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="add_events.php">
+      <a href="add_events.php" class="active">
         <i class="bi bi-circle"></i><span>Add Events</span>
       </a>
     </li>
@@ -531,7 +531,7 @@ if (isset($result) && $result) {
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Add Alumni Events</li>
+          <li class="breadcrumb-item ">Add Alumni Events</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->

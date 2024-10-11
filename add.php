@@ -23,7 +23,7 @@ if (isset($_POST['submit'])) {
   
     
     // SQL statement
-    $sql = "INSERT INTO `crud` (`student_no`, `lname`, `mname`, `fname`, `gender`, `email`, `contact`, `birthdate`)
+    $sql = "INSERT INTO `bcp-sms3_alumnidata` (`student_no`, `lname`, `mname`, `fname`, `gender`, `email`, `contact`, `birthdate`)
             VALUES ('$student_no', '$lname', '$mname', '$fname', '$gender', '$email', '$contact', '$birthdate')";
 
     // Execute the query
@@ -205,7 +205,7 @@ if (isset($result) && $result) {
       </a>
     </li> 
     <li>
-      <a href="add.php">
+      <a href="add.php" class="active">
         <i class="bi bi-circle"></i><span>Add new Alumni</span>
       </a>
     </li>

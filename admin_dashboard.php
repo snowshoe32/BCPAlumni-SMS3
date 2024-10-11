@@ -13,7 +13,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Guest'
 
 
 
-$sql = "SELECT * FROM user_db WHERE username = '$admin_name'";
+$sql = "SELECT * FROM bcp-sms3_user WHERE username = '$admin_name'";
 $result = mysqli_query($conn, $sql);
 
 
@@ -167,7 +167,7 @@ if ($result) {
     <hr class="sidebar-divider">
 
       <li class="nav-item">
-        <a class="nav-link " href="admin_dashboard.php">
+        <a class="nav-link " href="admin_dashboard.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>

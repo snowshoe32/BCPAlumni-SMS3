@@ -9,7 +9,7 @@ if (isset($_POST['submit'])) {
     $password = $_POST['password'];  // Input password (not hashed)
 
     // Check if user exists based on the username
-    $check_user = "SELECT * FROM `user_db` WHERE username = '$username'";
+    $check_user = "SELECT * FROM `bcp-sms3_user` WHERE username = '$username'";
     $result = mysqli_query($conn, $check_user);
 
     if (mysqli_num_rows($result) > 0) {

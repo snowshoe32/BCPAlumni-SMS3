@@ -2,7 +2,7 @@
 $dbHost = "localhost";
 $username = "root";
 $password = "";
-$dbname = "alumnibcp";
+$dbname = "bcp-sms3";
 
 $conn = mysqli_connect($dbHost, $username, $password, $dbname);
 if (!$conn) {

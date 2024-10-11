@@ -23,7 +23,7 @@ if (isset($_POST['submit'])) {
     
    
     // Corrected SQL query
-    $sql = "UPDATE `job_db` SET `jobtitle`='$jobtitle',`location`='$location',`email`='$email',`image`='$image',
+    $sql = "UPDATE `bcp-sms3_job` SET `jobtitle`='$jobtitle',`location`='$location',`email`='$email',`image`='$image',
     `description`='$description',`qualification`='$qualification',`salary`='$salary' WHERE id=$id";
     $result = mysqli_query($conn, $sql);
 
@@ -249,7 +249,7 @@ if ($result) {
   </a>
   <ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="job-post-manage.php">
+      <a href="job-post-manage.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Job Posting</span>
       </a>
     </li>
@@ -544,7 +544,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-$sql = "SELECT * FROM `job_db` WHERE `id` = '$id'";
+$sql = "SELECT * FROM `bcp-sms3_job` WHERE `id` = '$id'";
 $result = mysqli_query($conn, $sql);
 
         

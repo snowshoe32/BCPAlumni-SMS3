@@ -14,7 +14,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Guest'
 
 
 
-$sql = "SELECT * FROM user_db WHERE username = '$admin_name'";
+$sql = "SELECT * FROM bcp-sms3_user WHERE username = '$admin_name'";
 $result = mysqli_query($conn, $sql);
 
 
@@ -278,7 +278,7 @@ if ($result) {
       </a>
     </li>
     <li>
-      <a href="upcoming_events.php">
+      <a href="upcoming_events.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Events</span>
       </a>
     </li>
@@ -677,7 +677,7 @@ if ($result) {
   <tbody>
     <?php
     include "db_conn.php";
-    $sql = "SELECT * FROM `event_db`";
+    $sql = "SELECT * FROM `bcp-sms3_events`";
     $result = mysqli_query($conn, $sql);
     while ($row = mysqli_fetch_assoc($result)){ 
       $start_date = $row['start_date'];

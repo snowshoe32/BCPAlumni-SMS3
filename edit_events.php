@@ -30,7 +30,7 @@ if (isset($_POST['submit'])) {
 
    
     // Corrected SQL query
-   $sql = "UPDATE `event_db` SET `title`='$title',`location`='$location',`start_date`='$eventStartDateTime',`end_date`='$eventEndDateTime',`start_time`='$start_time', `end_time`='$end_time', `description`='$description',`status`='$status',`organizer`='$organizer',
+   $sql = "UPDATE `bcp-sms3_events` SET `title`='$title',`location`='$location',`start_date`='$eventStartDateTime',`end_date`='$eventEndDateTime',`start_time`='$start_time', `end_time`='$end_time', `description`='$description',`status`='$status',`organizer`='$organizer',
    `status`='$status',`organizer`='$organizer',`organizer_no`='$organizer_no',`organizer_email`='$organizer_email' WHERE id=$id";
 
     $result = mysqli_query($conn, $sql);
@@ -239,7 +239,7 @@ if ($result) {
       </a>
     </li>
     <li>
-      <a href="upcoming_events.php">
+      <a href="upcoming_events.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Events</span>
       </a>
     </li>
@@ -553,11 +553,11 @@ if (!$conn) {
 }
 
 
-$sql = "SELECT * FROM `event_db` WHERE `id` = '$id'";
+$sql = "SELECT * FROM `bcp-sms3_events` WHERE `id` = '$id'";
 $result = mysqli_query($conn, $sql);
 $sql = "SELECT DATE_FORMAT(start_time, '%H:%i') as start_time, 
                DATE_FORMAT(end_time, '%H:%i') as end_time 
-        FROM event_db 
+        FROM bcp-sms3_events 
         WHERE id = ?";
         $sql = "SELECT start_time, end_time FROM your_table WHERE id = ?";
         

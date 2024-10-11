@@ -243,7 +243,7 @@ if (isset($result) && $result) {
   </a>
   <ul id="system-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
     <li>
-      <a href="student-data.php">
+      <a href="student-data.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Alumni Data</span>
       </a>
     </li> 
@@ -668,7 +668,7 @@ if (isset($result) && $result) {
   <tbody>
     <?php
     include "db_conn.php";
-    $sql = "SELECT * FROM `crud`";
+    $sql = "SELECT * FROM `bcp-sms3_alumnidata`";
     $result = mysqli_query($conn, $sql);
     while ($row = mysqli_fetch_assoc($result)){ 
       $birthdate = $row['birthdate'];
