@@ -13,7 +13,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Guest'
 
 
 
-$sql = "SELECT * FROM bcp-sms3_user WHERE username = '$admin_name'";
+$sql = "SELECT * FROM bcp_sms3_user WHERE username = '$admin_name'";
 $result = mysqli_query($conn, $sql);
 
 
@@ -235,11 +235,6 @@ if ($result) {
         <i class="bi bi-circle"></i><span>Add Job Posting</span>
       </a>
     </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Manage Job Applications</span>
-      </a>
-    </li>
   </ul>
 <!-- Career Opportunities -->
 
@@ -251,49 +246,18 @@ if ($result) {
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="event-data.php">
+      <a href="id_manage.php">
         <i class="bi bi-circle"></i><span>Manage Alumni ID Applications</span>
       </a>
     </li>
     <li>
-      <a href="add-event.php">
+      <a href="admin_managenews.php">
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
   </ul>
 </li>
 <!--Student Alumni Services-->
-
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#report-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Report and Analytics</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="report-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="event-data.php">
-        <i class="bi bi-circle"></i><span>Customizable Reports</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Incoming Data</span>
-      </a>
-    </li>
-       <li>
-       <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Outgoing Data</span>
-      </a>
-    </li>
-<li>
-       <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Alumni Engagement</span>
-      </a>
-    </li>
-  </ul>
-</li>
-<!--Reports and Analytics-->
 
 <hr class="sidebar-divider">
 
@@ -513,6 +477,14 @@ if ($result) {
 
       <li class="nav-heading">Pages</li>
 
+       <li class="nav-item">
+        <a class="nav-link collapsed" href="id_forms.php">
+          <i class="bi bi-person"></i>
+          <span>User ID Form</span>
+        </a>
+      </li>
+       <!--User ID Form-->
+
       <li class="nav-item">
         <a class="nav-link collapsed" href="users-profile.html">
           <i class="bi bi-person"></i>
@@ -542,7 +514,7 @@ if ($result) {
       </li><!-- End Register Page Nav -->
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="pages-login.html">
+        <a class="nav-link collapsed" href="login_form.php">
           <i class="bi bi-box-arrow-in-right"></i>
           <span>Login</span>
         </a>

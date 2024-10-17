@@ -573,7 +573,7 @@ if (isset($result) && $result) {
           <div class="col-md-3">
             <label for="inputState" class="form-label">Gender</label>
             <select id="gender" class="form-select" name="gender" required>
-              <option selected value="">Choose...</option>
+              <option value="" selected disabled hidden>Choose...</option>
               <option value="M">Male</option>
               <option value="F">Female</option>
             </select>

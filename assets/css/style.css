@@ -233,6 +233,11 @@ h6 {
 
 }
 
+.card-group {
+  display: flex; /* Use flexbox */
+  flex-direction: column; /* Stack cards vertically */
+  gap: 100px; /* Adjust gap size here */
+}
 
 .card-title {
   padding: 20px 0 15px 0;
@@ -247,6 +252,7 @@ h6 {
   font-size: 14px;
   font-weight: 400;
 }
+
 
 .card-body {
   padding: 0 20px 20px 20px;
@@ -471,6 +477,38 @@ h6 {
 .header .search-form button i {
   color: #012970;
 }
+
+
+
+/*--------------------------------------------------------------
+# carousel
+--------------------------------------------------------------*/
+
+
+   
+    .carousel-inner img {
+        height: 20px; 
+        object-fit: cover; 
+    }
+
+    .carousel {
+        width: 100%; 
+        max-width: 100%; 
+    }
+
+   
+    .carousel-control-prev,
+    .carousel-control-next {
+        top: 0; 
+        bottom: 0;
+        height: 50px;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        height: 100%; 
+        width: auto; 
+    }
 
 
 /*--------------------------------------------------------------

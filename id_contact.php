@@ -1,72 +1,34 @@
 <?php
 session_start();
-include 'db_conn.php';
-$id = $_GET['id']; 
+include "db_conn.php";
 
-// Check if the user is logged in
 if (!isset($_SESSION['admin_name'])) {
-    header('Location: login_form.php');
-    exit();
+  header('Location: login_form.php');
+  exit();
 }
 
 $admin_name = $_SESSION['admin_name'];
 
-if (isset($_POST['submit'])) {
-    // Sanitize user inputs
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $location = mysqli_real_escape_string($conn, $_POST['location']); 
-    $start_date = mysqli_real_escape_string($conn, $_POST['start_date']);
-    $end_date = mysqli_real_escape_string($conn, $_POST['end_date']);
-    $start_time = mysqli_real_escape_string($conn, $_POST['start_time']);
-    $end_time = mysqli_real_escape_string($conn, $_POST['end_time']);
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
-    $organizer = mysqli_real_escape_string($conn, $_POST['organizer']);
-    $organizer_no = mysqli_real_escape_string($conn, $_POST['organizer_no']);
-    $organizer_email = mysqli_real_escape_string($conn, $_POST['organizer_email']);
-
-    $eventStartDateTime = $start_date . ' ' . $start_time;
-    $eventEndDateTime = $end_date . ' ' . $end_time;
-
-   
-    // Corrected SQL query
-   $sql = "UPDATE `bcp-sms3_events` SET `title`='$title',`location`='$location',`start_date`='$eventStartDateTime',`end_date`='$eventEndDateTime',`start_time`='$start_time', `end_time`='$end_time', `description`='$description',`status`='$status',`organizer`='$organizer',
-   `status`='$status',`organizer`='$organizer',`organizer_no`='$organizer_no',`organizer_email`='$organizer_email' WHERE id=$id";
-
-    $result = mysqli_query($conn, $sql);
-
-    if ($result) {  
-        header("Location: upcoming_events.php?msg=New record created successfully");
-        exit();
-    } else {
-        // Improved error handling
-        echo "MySQL Error: " . mysqli_error($conn);
-    }
-}
-
-
-
-if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
-        // Other logic for the admin dashboard
-    } else {
-        echo "No admin found with the username: " . htmlspecialchars($admin_name);
-    }
+if (isset($result) && $result) {
+  if (mysqli_num_rows($result) > 0) {
+      $row = mysqli_fetch_array($result);
+      
+  } else {
+      echo "No admin found with the username: " . htmlspecialchars($admin_name);
+  }
 } else {
-    echo "MySQL Error: " . mysqli_error($conn);
+  echo "MySQL Error: " . mysqli_error($conn);
 }
-
-
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta name ="viewport" meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
   <title>Dashboard - Title</title>
   <meta content="" name="description">
@@ -154,7 +116,7 @@ if ($result) {
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
+              <a class="dropdown-item d-flex align-items-center" href="#">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>Sign Out</span>
               </a>
@@ -184,12 +146,11 @@ if ($result) {
             LC
         </div>
         <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; text-align: center;">
-    <div style="font-weight: 500; color: #fff;">
-    
-    </div>
-</div>
+            <div style="font-weight: 500; color: #fff;">
+            <?php echo $_SESSION['admin_name'] ?>
+            </div>
             <div style="margin-top: 4px; font-size: 14px; color: #fff;">
-                <h6> <span> <?php echo $_SESSION['admin_name'] ?></span></h6>
+                ID
             </div>
         </div>
     </div>
@@ -218,18 +179,17 @@ if ($result) {
       </a>
     </li> 
     <li>
-      <a href="add.php">
+      <a href="add.php" class="active">
         <i class="bi bi-circle"></i><span>Add new Alumni</span>
       </a>
     </li>
   </ul>
 </li><!-- End System Nav -->
 
-      <hr class="sidebar-divider">
-
-
-    <!-- Events Management Nav -->
-    <li class="nav-item">
+      <hr class="sidebar-divider" />
+       
+       <!-- Events Management Nav -->
+<li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#events-nav" data-bs-toggle="collapse" href="#">
     <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Events</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
@@ -240,15 +200,14 @@ if ($result) {
       </a>
     </li>
     <li>
-      <a href="upcoming_events.php" class="active">
+      <a href="upcoming_events.php">
         <i class="bi bi-circle"></i><span>Manage Events</span>
       </a>
     </li>
     <li>
     </li>
   </ul>
-</li>
-<!-- Events Management Nav -->
+</li><!-- End Events Management Nav -->
       
 <hr class="sidebar-divider">
 
@@ -528,160 +487,201 @@ if ($result) {
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Add Alumni Events</h1>
+      <h1>Manage ID Applications</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Add Alumni Events</li>
+          <li class="breadcrumb-item">Student Alumni Services</li>
+          <li class="breadcrumb-item active">Manage ID Application</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
+    <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Bordered Tabs Justified</h5>
+
+              <!-- Bordered Tabs Justified -->
+              <ul class="nav nav-tabs nav-tabs-bordered d-flex" id="borderedTabJustified" role="tablist">
+  <li class="nav-item flex-fill" role="presentation">
+    <button class="nav-link w-100 active" id="home-tab" data-bs-toggle="tab" data-bs-target="#bordered-justified-home" type="button" role="tab" aria-controls="home" aria-selected="true">Approval of ID</button>
+  </li>
+  <li class="nav-item flex-fill" role="presentation">
+    <button class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#bordered-justified-profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Manage ID</button>
+  </li>
+  <li class="nav-item flex-fill" role="presentation">
+    <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#bordered-justified-contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Email Alumni</button>
+  </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content pt-2" id="borderedTabJustifiedContent">
+
+   <!-- Approval ID Applications -->
+  <div class="tab-pane fade show active" id="bordered-justified-home" role="tabpanel" aria-labelledby="home-tab">
     <section class="section">
       <div class="row">
-        <div class="col-md-10">
-
+        <div class="col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Alumni Events Form</h5>
-
-              <!-- General Form Elements -->
-              <?php
-include "db_conn.php";
-
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-
-
-$sql = "SELECT * FROM `bcp-sms3_events` WHERE `id` = '$id'";
-$result = mysqli_query($conn, $sql);
-$sql = "SELECT DATE_FORMAT(start_time, '%H:%i') as start_time, 
-               DATE_FORMAT(end_time, '%H:%i') as end_time 
-        FROM event_db 
-        WHERE id = ?";
-        $sql = "SELECT start_time, end_time FROM your_table WHERE id = ?";
-        
-        
-if ($result) {
-    $row = mysqli_fetch_assoc($result);
-    if ($row) {
-        $formatted_start_time = date("h:i A", strtotime($row['start_time']));
-    $formatted_end_time = date("h:i A", strtotime($row['end_time']));
-    $input_start_time = date("H:i", strtotime($row['start_time']));
-    $input_end_time = date("H:i", strtotime($row['end_time']));
-        $title = $row['title'];
-        $location = $row['location'];
-        $full_description = $row['description'];
-        
-    
-    } else {
-        echo "No record found for ID: $id";
-        exit;
-    }
-} else {
-    die("Error executing query: " . mysqli_error($conn));
-}
-
-
-?>
+              <h5 class="card-title">Approval of ID</h5>
+             
+              <?php 
+                  if(isset($_GET['msg'])){
+                    $msg = $_GET['msg'];
+                    echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                   '.$msg.'
+                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>';
+                  }
+                  ?>
               
+                <table class="table datatable  table-hover text-center">
+  <thead class="table">
+    <tr>
+      <th scope="col">ID</th>
+      <th scope="col">Last Name</th>
+      <th scope="col">First Name</th>
+      <th scope="col">Middle Name</th>
+      <th scope="col">Student Number</th>
+      <th scope="col">Contact</th>
+      <th scope="col">Course</th>
+      <th scope="col">Year Graduated</th>
+      <th scope="col">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php
+    include "db_conn.php";
+    $sql = "SELECT * FROM `bcp-sms3_idapprove`";
+    $result = mysqli_query($conn, $sql);
+    while ($row = mysqli_fetch_assoc($result)){ 
+      $student_no = $row['student_no'];
+    ?>
+      
+      <tr>
+      <td><?php echo $row['id'] ?></td>
+      <td><?php echo $row['last_name'] ?></td>
+      <td><?php echo $row['first_name'] ?></td>
+      <td><?php echo $row['middle_name'] ?></td>
+      <td><?php echo $row['student_no'] ?></td>
+      <td><?php echo $row['contact'] ?></td>  
+      <td><?php echo $row['course'] ?></td> 
+      <td><?php echo $row['batch'] ?></td> 
+      <td>
+      <a href="id_approval.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="ri ri-draft-fill "></i></a>
+        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
+  <i class="bx bxs-trash"></i>
+</a>
+      </td>
+      </tr> 
+    
+    <!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Delete Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this record?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
+        <!-- The delete button where we will inject the dynamic ID -->
+        <a href="#" id="confirmDelete" class="btn btn-danger">Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  var deleteModal = document.getElementById('deleteModal');
+  deleteModal.addEventListener('show.bs.modal', function (event) {
+    // Button that triggered the modal
+    var button = event.relatedTarget;
+    // Extract the record id from data-id attribute
+    var recordId = button.getAttribute('data-id');
+    
+    // Update the modal's delete button with the correct delete link
+    var confirmDelete = deleteModal.querySelector('#confirmDelete');
+    confirmDelete.setAttribute('href', 'delete.php?id=' + recordId);
+  });
+</script>
+    <?php
+    }
+    ?> 
 
-              <form class="row mb-3" method="post">
-                <div class="row mb-3">
-                  <label for="inputText" class="col-sm-2 col-form-label">Event Title</label>
-                  <div class="col-sm-10">
-                    <input type="text" class="form-control" name="title" value="<?php echo $row['title']?>" required disabled>
-                  </div>
-                </div>
-                
-                <div class="row mb-3">
-                  <label for="inputEmail" class="col-sm-2 col-form-label">Event Location</label>
-                  <div class="col-sm-10">
-                    <input type="text" class="form-control" name="location" value="<?php echo $row['location']?>" required disabled>
-                  </div>
-                </div>
-               
-                <div class="row mb-3">
-                  <label for="inputDate" class="col-sm-2 col-form-label">Start Date</label>
-                  <div class="col-sm-10">
-                    <input type="date" class="form-control" name="start_date" value="<?php echo $row['start_date']?>"required disabled>
-                  </div>
-                </div>
-                <div class="row mb-3">
-                  <label for="inputDate" class="col-sm-2 col-form-label">End Date</label>
-                  <div class="col-sm-10">
-                    <input type="date" class="form-control" name="end_date" value="<?php echo $row['end_date']?>"required disabled>
-                  </div>
-                </div>
-                <div class="row mb-3">
-    <label for="inputTime" class="col-sm-2 col-form-label">Start Time</label>
-    <div class="col-sm-10">
-        <input type="time" class="form-control" name="start_time" value="<?php echo htmlspecialchars($input_start_time); ?>" disabled>
-        
-    </div>
-</div>
-<div class="row mb-3">
-    <label for="inputTime" class="col-sm-2 col-form-label">End Time</label>
-    <div class="col-sm-10">
-        <input type="time" class="form-control" name="end_time" value="<?php echo htmlspecialchars($input_end_time); ?>" disabled>
-        
-    </div>
-</div>
- 
-                <div class="row mb-3">
-                  <label for="inputPassword" class="col-sm-2 col-form-label">Event Description</label>
-                  <div class="col-sm-10">
-                    <textarea class="form-control" style="height: 150px" name="description" disabled ><?php echo htmlspecialchars($full_description); ?></textarea>
-                  </div>
-                </div>
-                <div class="row mb-3">
-    <label for="userType" class="col-sm-2 col-form-label">Status</label>
-    <div class="col-sm-3">
-        <select name="status" class="form-control" required disabled> 
-            <option value="Upcoming" <?php if ($row['status'] === 'Upcoming') echo 'selected'; ?>>Upcoming</option>         
-            <option value="Cancelled" <?php if ($row['status'] === 'Cancelled') echo 'selected'; ?>>Cancelled</option>
-            <option value="Ended" <?php echo ($row['status'] == 'Ended') ? 'selected' : ''; ?>>Ended</option>
-            <option value="Ongoing" <?php echo ($row['status'] == 'Ongoing') ? 'selected' : ''; ?>>Ongoing</option>
-        </select>
-    </div>
-</div>
-                </fieldset>
-                <div class="row mb-3">
-                  <label for="inputText" class="col-sm-2 col-form-label">Event Organizer</label>
-                  <div class="col-sm-10">
-                    <input type="text" class="form-control" name="organizer" value="<?php echo $row['organizer']?>" disabled>
-                  </div>
-                </div>
-                <div class="row mb-3">
-                  <label for="inputText" class="col-sm-2 col-form-label">Event Organizer Email</label>
-                  <div class="col-sm-10">
-                    <input type="email" class="form-control" name="organizer_email" value="<?php echo $row['organizer_email']?>" disabled>
-                  </div>
-                </div>
+  </tbody>
+</table>
 
-                <div class="row mb-3">
-          <label for="inputContact" class="col-sm-2 col-form-label">Event Organizer Contact No.</label>
-          <div class="col-sm-3">
-           <input type="text" class="form-control" pattern="\d{11}" name="organizer_no" maxlength="11" disabled
-         oninput="this.value=this.value.replace(/[^0-9]/g,'')" value="<?php echo $row['organizer_no']?>" 
-         title="Contact number must be exactly 11 digits.">
-          <div class="invalid-feedback">
-    Please enter exactly 11 numeric digits for the contact number.
-       </div>
-        </div>
-       </div>
- 
-       <form action="upcoming_events.php" method="POST">
-          
-          <div class="text-center">
-          <a href="upcoming_events.php" class="btn btn-primary">Back</a>
+
+            </div>
           </div>
+        </div>
+      </div>
+    </section>
+  </div>
+<!--Approval of ID-->
 
-              </form>
-              <!-- End General Form Elements -->
 
+  <!-- Manage ID Applications -->
+  <div class="tab-pane fade" id="bordered-justified-profile" role="tabpanel" aria-labelledby="profile-tab">
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Manage ID Applications</h5>
+              <div class="table container-table">              
+
+  </tbody>
+</table>
+          
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+ <!-- Manage ID Applications -->
+
+
+
+
+  <!-- ID Announcements and Email -->
+  <div class="tab-pane fade" id="bordered-justified-contact" role="tabpanel" aria-labelledby="contact-tab">
+    <section class="section" class="contact-info"><a href=""></a>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Contact - Information</h5>
+              <div class="table container-table">
+                  ddddd
+              <!-- Add relevant content for the Contact tab here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
   
+        </form><!-- End Multi Columns Form -->
+
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
 
   </main><!-- End #main -->
 
@@ -713,4 +713,3 @@ if ($result) {
 </body>
 
 </html>
-

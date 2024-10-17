@@ -1,10 +1,10 @@
 <?php
 include "db_conn.php";
 $id = $_GET['id'];
-$sql = "DELETE FROM `past_events` WHERE id = $id";
+$sql = "DELETE FROM `bcp_sms3_idapprove` WHERE id = $id";
 $result = mysqli_query($conn, $sql);
 if($result){
-    header("Location: past_events.php?msg=Record deleted Successfuly");
+    header("Location: id_manage.php?msg=Record deleted Successfuly");
 
 } 
 else{

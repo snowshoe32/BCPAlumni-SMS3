@@ -1,7 +1,6 @@
 <?php
 session_start();
 include 'db_conn.php';
-$id = $_GET['id']; 
 
 // Check if the user is logged in
 if (!isset($_SESSION['admin_name'])) {
@@ -13,52 +12,40 @@ $admin_name = $_SESSION['admin_name'];
 
 if (isset($_POST['submit'])) {
     // Sanitize user inputs
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $location = mysqli_real_escape_string($conn, $_POST['location']); 
-    $start_date = mysqli_real_escape_string($conn, $_POST['start_date']);
-    $end_date = mysqli_real_escape_string($conn, $_POST['end_date']);
-    $start_time = mysqli_real_escape_string($conn, $_POST['start_time']);
-    $end_time = mysqli_real_escape_string($conn, $_POST['end_time']);
+    $headline = mysqli_real_escape_string($conn, $_POST['headline']);
+    $publisher = mysqli_real_escape_string($conn, $_POST['publisher']); 
+    $date = mysqli_real_escape_string($conn, $_POST['date']);
     $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
-    $organizer = mysqli_real_escape_string($conn, $_POST['organizer']);
-    $organizer_no = mysqli_real_escape_string($conn, $_POST['organizer_no']);
-    $organizer_email = mysqli_real_escape_string($conn, $_POST['organizer_email']);
-
-    $eventStartDateTime = $start_date . ' ' . $start_time;
-    $eventEndDateTime = $end_date . ' ' . $end_time;
-
+    $photo = mysqli_real_escape_string($conn, $_POST['photo']);
    
-    // Corrected SQL query
-   $sql = "UPDATE `bcp-sms3_events` SET `title`='$title',`location`='$location',`start_date`='$eventStartDateTime',`end_date`='$eventEndDateTime',`start_time`='$start_time', `end_time`='$end_time', `description`='$description',`status`='$status',`organizer`='$organizer',
-   `status`='$status',`organizer`='$organizer',`organizer_no`='$organizer_no',`organizer_email`='$organizer_email' WHERE id=$id";
+  
+    $sql = "INSERT INTO `bcp-sms3_news`( `headline`, `publisher`, `date`, `description`, `photo`)
+     VALUES ('$headline','$publisher','$date','$description','$photo')";
 
+    
     $result = mysqli_query($conn, $sql);
 
+    
     if ($result) {  
-        header("Location: upcoming_events.php?msg=New record created successfully");
+        header("Location: admin_managenews.php?msg=New record created successfully");
         exit();
     } else {
-        // Improved error handling
+       
         echo "MySQL Error: " . mysqli_error($conn);
     }
 }
 
 
-
-if ($result) {
+if (isset($result) && $result) {
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_array($result);
-        // Other logic for the admin dashboard
+        
     } else {
         echo "No admin found with the username: " . htmlspecialchars($admin_name);
     }
 } else {
     echo "MySQL Error: " . mysqli_error($conn);
 }
-
-
-
 ?>
 
 <!DOCTYPE html>
@@ -92,6 +79,10 @@ if ($result) {
 
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
+
+
+ 
+
 
 </head>
 
@@ -224,31 +215,29 @@ if ($result) {
     </li>
   </ul>
 </li><!-- End System Nav -->
-
       <hr class="sidebar-divider">
 
 
-    <!-- Events Management Nav -->
-    <li class="nav-item">
+     <!-- Events Management Nav -->
+     <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#events-nav" data-bs-toggle="collapse" href="#">
     <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Events</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="events-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="add_events.php">
+      <a href="add_events.php" class="active">
         <i class="bi bi-circle"></i><span>Add Events</span>
       </a>
     </li>
     <li>
-      <a href="upcoming_events.php" class="active">
+      <a href="upcoming_events.php">
         <i class="bi bi-circle"></i><span>Manage Events</span>
       </a>
     </li>
     <li>
     </li>
   </ul>
-</li>
-<!-- Events Management Nav -->
+</li><!-- End Events Management Nav -->
       
 <hr class="sidebar-divider">
 
@@ -528,11 +517,11 @@ if ($result) {
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Add Alumni Events</h1>
+      <h1>Alumni Services</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Add Alumni Events</li>
+          <li class="breadcrumb-item ">Add News</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -543,139 +532,53 @@ if ($result) {
 
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Alumni Events Form</h5>
+              <h5 class="card-title">News & Announcements</h5>
 
               <!-- General Form Elements -->
-              <?php
-include "db_conn.php";
-
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-
-
-$sql = "SELECT * FROM `bcp-sms3_events` WHERE `id` = '$id'";
-$result = mysqli_query($conn, $sql);
-$sql = "SELECT DATE_FORMAT(start_time, '%H:%i') as start_time, 
-               DATE_FORMAT(end_time, '%H:%i') as end_time 
-        FROM event_db 
-        WHERE id = ?";
-        $sql = "SELECT start_time, end_time FROM your_table WHERE id = ?";
-        
-        
-if ($result) {
-    $row = mysqli_fetch_assoc($result);
-    if ($row) {
-        $formatted_start_time = date("h:i A", strtotime($row['start_time']));
-    $formatted_end_time = date("h:i A", strtotime($row['end_time']));
-    $input_start_time = date("H:i", strtotime($row['start_time']));
-    $input_end_time = date("H:i", strtotime($row['end_time']));
-        $title = $row['title'];
-        $location = $row['location'];
-        $full_description = $row['description'];
-        
-    
-    } else {
-        echo "No record found for ID: $id";
-        exit;
-    }
-} else {
-    die("Error executing query: " . mysqli_error($conn));
-}
-
-
-?>
               
-
               <form class="row mb-3" method="post">
                 <div class="row mb-3">
-                  <label for="inputText" class="col-sm-2 col-form-label">Event Title</label>
+                  <label for="inputText" class="col-sm-2 col-form-label">Headline</label>
                   <div class="col-sm-10">
-                    <input type="text" class="form-control" name="title" value="<?php echo $row['title']?>" required disabled>
+                    <input type="text" class="form-control" name="headline" required>
                   </div>
                 </div>
                 
                 <div class="row mb-3">
-                  <label for="inputEmail" class="col-sm-2 col-form-label">Event Location</label>
+                  <label for="inputEmail" class="col-sm-2 col-form-label">Publisher</label>
                   <div class="col-sm-10">
-                    <input type="text" class="form-control" name="location" value="<?php echo $row['location']?>" required disabled>
+                    <input type="text" class="form-control" name="publisher" required>
                   </div>
                 </div>
                
                 <div class="row mb-3">
-                  <label for="inputDate" class="col-sm-2 col-form-label">Start Date</label>
+                  <label for="inputDate" class="col-sm-2 col-form-label">Date Published</label>
                   <div class="col-sm-10">
-                    <input type="date" class="form-control" name="start_date" value="<?php echo $row['start_date']?>"required disabled>
+                    <input type="date" class="form-control" name="date" required>
                   </div>
-                </div>
-                <div class="row mb-3">
-                  <label for="inputDate" class="col-sm-2 col-form-label">End Date</label>
-                  <div class="col-sm-10">
-                    <input type="date" class="form-control" name="end_date" value="<?php echo $row['end_date']?>"required disabled>
-                  </div>
-                </div>
-                <div class="row mb-3">
-    <label for="inputTime" class="col-sm-2 col-form-label">Start Time</label>
-    <div class="col-sm-10">
-        <input type="time" class="form-control" name="start_time" value="<?php echo htmlspecialchars($input_start_time); ?>" disabled>
-        
-    </div>
-</div>
-<div class="row mb-3">
-    <label for="inputTime" class="col-sm-2 col-form-label">End Time</label>
-    <div class="col-sm-10">
-        <input type="time" class="form-control" name="end_time" value="<?php echo htmlspecialchars($input_end_time); ?>" disabled>
-        
-    </div>
-</div>
+                
  
                 <div class="row mb-3">
                   <label for="inputPassword" class="col-sm-2 col-form-label">Event Description</label>
                   <div class="col-sm-10">
-                    <textarea class="form-control" style="height: 150px" name="description" disabled ><?php echo htmlspecialchars($full_description); ?></textarea>
+                    <textarea class="form-control" style="height: 150px" name="description"></textarea>
                   </div>
                 </div>
                 <div class="row mb-3">
-    <label for="userType" class="col-sm-2 col-form-label">Status</label>
-    <div class="col-sm-3">
-        <select name="status" class="form-control" required disabled> 
-            <option value="Upcoming" <?php if ($row['status'] === 'Upcoming') echo 'selected'; ?>>Upcoming</option>         
-            <option value="Cancelled" <?php if ($row['status'] === 'Cancelled') echo 'selected'; ?>>Cancelled</option>
-            <option value="Ended" <?php echo ($row['status'] == 'Ended') ? 'selected' : ''; ?>>Ended</option>
-            <option value="Ongoing" <?php echo ($row['status'] == 'Ongoing') ? 'selected' : ''; ?>>Ongoing</option>
-        </select>
-    </div>
+              
+                  <label for="inputNumber" class="col-sm-2 col-form-label">Upload Photo</label>
+                  <div class="col-sm-10">
+                    <input class="form-control" type="file" id="formFile" name="photo">
+                  </div>
 </div>
-                </fieldset>
-                <div class="row mb-3">
-                  <label for="inputText" class="col-sm-2 col-form-label">Event Organizer</label>
-                  <div class="col-sm-10">
-                    <input type="text" class="form-control" name="organizer" value="<?php echo $row['organizer']?>" disabled>
-                  </div>
-                </div>
-                <div class="row mb-3">
-                  <label for="inputText" class="col-sm-2 col-form-label">Event Organizer Email</label>
-                  <div class="col-sm-10">
-                    <input type="email" class="form-control" name="organizer_email" value="<?php echo $row['organizer_email']?>" disabled>
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-          <label for="inputContact" class="col-sm-2 col-form-label">Event Organizer Contact No.</label>
-          <div class="col-sm-3">
-           <input type="text" class="form-control" pattern="\d{11}" name="organizer_no" maxlength="11" disabled
-         oninput="this.value=this.value.replace(/[^0-9]/g,'')" value="<?php echo $row['organizer_no']?>" 
-         title="Contact number must be exactly 11 digits.">
-          <div class="invalid-feedback">
-    Please enter exactly 11 numeric digits for the contact number.
-       </div>
-        </div>
-       </div>
+               
  
-       <form action="upcoming_events.php" method="POST">
+       <form action="submit.php" method="POST">
           
           <div class="text-center">
-          <a href="upcoming_events.php" class="btn btn-primary">Back</a>
+            <button type="submit" class="btn btn-primary" name="submit">Submit</button>
+           <a href="admin_managenews.php" class="btn btn-secondary">Back</a>
+            
           </div>
 
               </form>

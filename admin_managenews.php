@@ -1,36 +1,28 @@
-
 <?php
 session_start();
-include 'db_conn.php';
+include "db_conn.php";
 
-
-
-if(!isset($_SESSION['admin_name'])){
-    header('Location:login_form.php');
-    exit();
-    
+if (!isset($_SESSION['admin_name'])) {
+  header('Location: login_form.php');
+  exit();
 }
-$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Guest';
 
+$admin_name = $_SESSION['admin_name'];
 
-
-$sql = "SELECT * FROM bcp_sms3_user WHERE username = '$admin_name'";
-$result = mysqli_query($conn, $sql);
-
-
-if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
-        // Other logic for the admin dashboard
-    } else {
-        echo "No admin found with the username: " . htmlspecialchars($admin_name);
-    }
+if (isset($result) && $result) {
+  if (mysqli_num_rows($result) > 0) {
+      $row = mysqli_fetch_array($result);
+      
+  } else {
+      echo "No admin found with the username: " . htmlspecialchars($admin_name);
+  }
 } else {
-    echo "MySQL Error: " . mysqli_error($conn);
+  echo "MySQL Error: " . mysqli_error($conn);
 }
-
-
 ?>
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -224,7 +216,7 @@ if ($result) {
               align-items: center;
               margin-top: 24px;
               text-align: center;
-            "
+            " 
           >
             <div style="font-weight: 500; color: #fff"><?php echo $_SESSION['admin_name'] ?></div>
             <div style="margin-top: 4px; font-size: 14px; color: #fff">ID</div>
@@ -239,18 +231,19 @@ if ($result) {
             <span>Dashboard</span>
           </a>
         </li>
-         
-        <hr class="sidebar-divider">
         <!-- End Dashboard Nav -->
+
+        <hr class="sidebar-divider" />
+
         <li class="nav-heading">Your System</li>
 
-<li class="nav-item">
+        <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#system-nav" data-bs-toggle="collapse" href="#">
     <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Data</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="system-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
     <li>
-      <a href="student-data.php">
+      <a href="student-data.php" class="active">
         <i class="bi bi-circle"></i><span>Manage Alumni Data</span>
       </a>
     </li> 
@@ -262,11 +255,9 @@ if ($result) {
   </ul>
 </li><!-- End System Nav -->
 
-<hr class="sidebar-divider">
+        <hr class="sidebar-divider" />
 
-      
-
-        <!-- Events Management Nav -->
+           <!-- Events Management Nav -->
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#events-nav" data-bs-toggle="collapse" href="#">
     <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Events</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -278,7 +269,7 @@ if ($result) {
       </a>
     </li>
     <li>
-      <a href="upcoming_events.php" class="active">
+      <a href="upcoming_events.php">
         <i class="bi bi-circle"></i><span>Manage Events</span>
       </a>
     </li>
@@ -287,7 +278,6 @@ if ($result) {
   </ul>
 </li><!-- End Events Management Nav -->
       
-   
 <hr class="sidebar-divider">
 
 <li class="nav-item">
@@ -333,8 +323,10 @@ if ($result) {
   </ul>
 </li>
 <!--Student Alumni Services-->
-<hr class="sidebar-divider">
+<hr class="sidebar-divider" />
+         
 
+        
         <li class="nav-item">
           <a
             class="nav-link collapsed"
@@ -484,7 +476,7 @@ if ($result) {
               </a>
             </li>
             <li>
-              <a href="tables-data.html" >
+              <a href="tables-data.html" class="active">
                 <i class="bi bi-circle"></i><span>Data Tables</span>
               </a>
             </li>
@@ -595,7 +587,7 @@ if ($result) {
         <!-- End Register Page Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-login.html">
+          <a class="nav-link collapsed" href="login_form.php">
             <i class="bi bi-box-arrow-in-right"></i>
             <span>Login</span>
           </a>
@@ -623,12 +615,12 @@ if ($result) {
 
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>Data Tables</h1>
+        <h1>News & Announcements</h1>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item">Alumni Events</li>
-            <li class="breadcrumb-item active">Upcoming Events</li>
+            <li class="breadcrumb-item">Tables</li>
+            <li class="breadcrumb-item active">News</li>
           </ol>
         </nav>
       </div>
@@ -636,13 +628,13 @@ if ($result) {
 
       <section class="section">
         <div class="row">
-          <div class="col-lg-15">
+          <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Upcoming Events</h5>
+                <h5 class="card-title">News Archives</h5>
                 <p>
                  
-                
+                <a href="admin_news.php" class="btn btn-dark mb-3">Add New</a>
                 
                 </p>
 
@@ -657,74 +649,35 @@ if ($result) {
                     </div>';
                   }
                   ?>
-                  <a href="add_events.php" class="btn btn-dark mb-3">Add New</a>
                 <table class="table datatable  table-hover text-center">
   <thead class="table">
     <tr>
       <th scope="col">ID</th>
-      <th scope="col">Event Title</th>
-      <th scope="col">Location</th>
-      <th scope="col" data-type="date" data-format="DD/MM/YYYY">Start Date</th>
-      <th scope="col" data-type="date" data-format="DD/MM/YYYY">End Date</th>
-      <th scope="col">Start Time</th>
-      <th scope="col">End Time</th>
-      <th scope="col">Status</th>
-      <th scope="col">Organizer</th>
+      <th scope="col">Headline</th>
+      <th scope="col">Publisher</th>
+      <th scope="col">Date</th>
       <th scope="col">Action</th>
-
     </tr>
   </thead>
   <tbody>
     <?php
     include "db_conn.php";
-    $sql = "SELECT * FROM `bcp-sms3_events`";
+    $sql = "SELECT * FROM `bcp-sms3_news`";
     $result = mysqli_query($conn, $sql);
     while ($row = mysqli_fetch_assoc($result)){ 
-      $start_date = $row['start_date'];
-      $end_date = $row['end_date'];
-      $formatted_start_date = date("m/d/Y", strtotime($start_date));
-      $formatted_end_date = date("m/d/Y", strtotime($end_date));
-       //////
-      $formatted_start_time = date("h:i A", strtotime($row['start_time']));
-      $formatted_end_time = date("h:i A", strtotime($row['end_time']));
-      //////
-      
-      $truncated_title = substr($row['title'], 0, 10) . '...';
-      $truncated_location = substr($row['location'], 0, 10) . '...';
-      $truncated_organizer_email = substr($row['organizer_email'], 0, 10) . '...';
-
+        $date = $row['date'];
+      $formatted_date = date("m/d/Y", strtotime($date));
       
     ?>
       
       <tr>
       <td><?php echo $row['id'] ?></td>
-      <td><?php echo $row['title'] ?></td>
-      <td><?php echo $truncated_location; ?></td>
-      <td><?php echo $formatted_start_date; ?></td>
-        <td><?php echo $formatted_end_date; ?></td>
-        <td><?php echo $formatted_start_time; ?></td>
-        <td><?php echo $formatted_end_time; ?></td>  
-       
-        <td>
-   <h5> <span class= "badge 
-        <?php 
-           
-            if ($row['status'] === 'Upcoming') {
-                echo 'bg-primary'; 
-            } elseif ($row['status'] === 'Ended') {
-                echo 'bg-secondary'; 
-            } elseif ($row['status'] === 'Ongoing')
-            echo 'bg-warning';
-            elseif ($row['status'] === 'Cancelled')
-            echo 'bg-danger';
-        ?> ">
-        <?php echo $row['status']; ?>
-    </span></h5>
-</td>
-      <td><?php echo $row['organizer'] ?></td>
+      <td><?php echo $row['headline'] ?></td>
+      <td><?php echo $row['publisher'] ?></td>
+      <td><?php echo $formatted_date; ?></td> 
       <td>
-       <a href="viewevent.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="edit_events.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
+      <a href="viewdata.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
+        <a href="edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
         <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
   <i class="bx bxs-trash"></i>
 </a>
@@ -760,7 +713,7 @@ if ($result) {
     
     // Update the modal's delete button with the correct delete link
     var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'delete_events.php?id=' + recordId);
+    confirmDelete.setAttribute('href', 'delete.php?id=' + recordId);
   });
 </script>
     <?php

@@ -12,7 +12,7 @@ if (!isset($_SESSION['admin_name'])) {
 $admin_name = $_SESSION['admin_name'];
 
 if (isset($_POST['submit'])) {
-    // Sanitize user inputs
+   
     $student_no = mysqli_real_escape_string($conn, $_POST['student_no']);
     $lname = mysqli_real_escape_string($conn, $_POST['lname']); 
     $mname = mysqli_real_escape_string($conn, $_POST['mname']); 
@@ -31,9 +31,9 @@ if (isset($_POST['submit'])) {
     $result = mysqli_query($conn, $sql);
     if ($result) {  
         header("Location: student-data.php?msg=Record Updated successfully");
-        exit(); // Good practice to call exit after header redirection
+        exit(); 
     } else {
-        echo "Failed: " . mysqli_error($conn); // Display error message
+        echo "Failed: " . mysqli_error($conn); 
     } 
 }
 
@@ -599,7 +599,7 @@ if ($result) {
           <div class="col-md-3">
          <label for="inputState" class="form-label">Gender</label>
           <select id="gender" class="form-select" name="gender" required>
-        <option value="">Choose...</option>
+        <option value="" selected hidden disabled>Choose...</option>
         <option value="M" <?php echo ($row['gender'] == 'M') ? 'selected' : ''; ?>>Male</option>
         <option value="F" <?php echo ($row['gender'] == 'F') ? 'selected' : ''; ?>>Female</option>
     </select>
