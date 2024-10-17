@@ -10,14 +10,14 @@ if (isset($_POST['submit'])) {
     $user_type = mysqli_real_escape_string($conn, $_POST['user_type']);
 
     // Check if user already exists
-    $check_email = "SELECT * FROM `bcp-sms3_user` WHERE email = '$email'";
+    $check_email = "SELECT * FROM `bcp_sms3_user` WHERE email = '$email'";
     $result = mysqli_query($conn, $check_email);
 
     if (mysqli_num_rows($result) > 0) {
         $error[] = 'This Email is already registered!';
     } else {
         
-        $sql = "INSERT INTO `bcp-sms3_user` (`name`, `email`, `username`, `password`, `user_type`) 
+        $sql = "INSERT INTO `bcp_sms3_user` (`name`, `email`, `username`, `password`, `user_type`) 
                 VALUES ('$name', '$email', '$username', '$password', '$user_type')";
 
         
@@ -172,7 +172,7 @@ function togglePasswordVisibility() {
         <button class="btn btn-primary w-100" type="submit" name="submit">Create Account</button>
     </div>
     <div class="col-12">
-        <p class="small mb-0">Already have an account? <a href="login_form.php">Log in</a></p>
+        <p class="small mb-0">Already have an account? <a href="index.php">Log in</a></p>
     </div>
 </form>
 
