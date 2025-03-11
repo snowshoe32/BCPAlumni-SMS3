@@ -1,19 +1,18 @@
 <?php
-// Database credentials
+
 $dbHost = 'localhost';     // Host name
 $dbUser = 'root';          // MySQL username
 $dbPass = '';              // MySQL password
 $dbName = 'alumni.bcpsms3.com'; // Database name
 
-// Create a connection
+
 $conn = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
 
-// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Query to fetch data from the 'users' table
+
 $sql = "SELECT id, name, email, created_at FROM users";
 $result = $conn->query($sql);
 ?>              

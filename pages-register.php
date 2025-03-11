@@ -1,4 +1,5 @@
 <?php
+session_start();
 include "db_conn.php"; 
 
 if (isset($_POST['submit'])) {
@@ -31,7 +32,11 @@ if (isset($_POST['submit'])) {
         }
     }
 }
-
+if (!isset($_SESSION['access_granted']) || $_SESSION['access_granted'] !== true) {
+  // Redirect to the code entry page
+  header('Location: access-code-form.php');
+  exit();
+}
 
 if (isset($error)) {
     foreach ($error as $msg) {
@@ -52,7 +57,7 @@ if (isset($error)) {
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon">
+  <link href="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" rel="icon">
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
@@ -84,7 +89,7 @@ if (isset($error)) {
               <div class="d-flex justify-content-center py-4">
                 <a href="index.html" class="logo d-flex align-items-center w-auto">
                   <img src="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" alt="Logo">
-                  <span class="d-none d-lg-block">Your System Admin/Staff Register</span>
+                  <span class="d-none d-lg-block">Create an Account</span>
                 </a>
               </div><!-- End Logo -->
 
@@ -102,13 +107,13 @@ if (isset($error)) {
 
                   <form class="row g-3" method="POST" action="pages-register.php">
     <div class="col-12">
-        <label for="yourName" class="form-label">Your Name</label>
+        <label for="yourName" class="form-label">Full Name</label>
         <input type="text" name="name" class="form-control" id="yourName" required>
         <div class="invalid-feedback">Please, enter your name!</div>
     </div>
 
     <div class="col-12">
-        <label for="yourEmail" class="form-label">Your Email</label>
+        <label for="yourEmail" class="form-label">Email</label>
         <input type="email" name="email" class="form-control" id="yourEmail" required>
         <div class="invalid-feedback">Please enter a valid Email address!</div>
     </div>
@@ -156,18 +161,57 @@ function togglePasswordVisibility() {
     <div class="col-12">
         <label for="userType" class="form-label">User Type</label>
         <select name="user_type" class="form-control" required>
-            <option value="user">User</option>
+            <option value="user">Staff</option>
             <option value="admin">Admin</option>
         </select>
     </div>
 
     <div class="col-12">
-        <div class="form-check">
-            <input class="form-check-input" name="terms" type="checkbox" value="" id="acceptTerms" required>
-            <label class="form-check-label" for="acceptTerms">I agree and accept the <a href="#">terms and conditions</a></label>
-            <div class="invalid-feedback">You must agree before submitting.</div>
+    <div class="form-check">
+        <input class="form-check-input" name="terms" type="checkbox" value="" id="acceptTerms" required>
+        <label class="form-check-label" for="acceptTerms">
+            I agree and accept the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">terms and conditions</a>
+        </label>
+        <div class="invalid-feedback">You must agree before submitting.</div>
+    </div>
+</div>
+
+<!-- Modal for Terms and Conditions -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Welcome to Bestlink College of the Philippines. These terms and conditions outline the rules and regulations 
+                    for the use of our services. By accessing this website, we assume you accept these terms and conditions 
+                    in full. Do not continue to use Alumni Management System if you do not accept all of the terms and conditions 
+                    stated on this page.
+                </p>
+                <h6>1. Data Collection</h6>
+                <p>
+                    We collect personal information to provide better services. By using our services, you agree to the 
+                    collection and use of information in accordance with this policy.
+                </p>
+                <h6>2. User Obligations</h6>
+                <p>
+                    Users agree not to misuse the service and must comply with all applicable laws.
+                </p>
+                <h6>3. Privacy Policy</h6>
+                <p>
+                    Please refer to our <a href="#">Privacy Policy</a> for more information on how we handle your data.
+                </p>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
+</div>
     <div class="col-12">
         <button class="btn btn-primary w-100" type="submit" name="submit">Create Account</button>
     </div>
@@ -180,7 +224,7 @@ function togglePasswordVisibility() {
               </div>
 
               <div class="credits">
-                BCP
+               
               </div>
 
             </div>
