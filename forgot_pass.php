@@ -1,36 +1,63 @@
 <?php
-
-include "db_conn.php"; 
 session_start();
+include "db_conn.php"; 
+require 'vendor/autoload.php'; // Include PHPMailer
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
+    header('Location: index.php');
+    exit();
+}
 
 if (isset($_POST['submit'])) {
-    
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = $_POST['password'];  // Input password (not hashed)
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
 
-    // Check if user exists based on the username
-    $check_user = "SELECT * FROM `bcp_sms3_user` WHERE username = '$username'";
+    // Check if user exists based on the email
+    $check_user = "SELECT * FROM `bcp_sms3_user` WHERE email = '$email'";
     $result = mysqli_query($conn, $check_user);
 
     if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
-        // Verifying hashed password with input password
-        if (password_verify($password, $row['password'])) {
-            // Set session based on user type
-            if ($row['user_type'] == 'admin') {
-                $_SESSION['admin_name'] = $row['name'];
-                header('location:admin_dashboard.php');  
-            } else if ($row['user_type'] == 'user') {
-                $_SESSION['user_name'] = $row['name'];
-                header('location:user_dashboard.php');  
+        $user = mysqli_fetch_assoc($result);
+        $name = $user['name'];
+        $token = bin2hex(random_bytes(50)); // Generate a random token
+
+        // Save the token in the database (you need to create a table for tokens if not exists)
+        $save_token = "INSERT INTO password_reset_tokens (email, token) VALUES ('$email', '$token')";
+        if (mysqli_query($conn, $save_token)) {
+            $mail = new PHPMailer(true);
+            try {
+                //Server settings
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com'; // Set the SMTP server to send through
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'snowshoe0103@gmail.com'; // SMTP username
+                $mail->Password   = 'bvoa zaxb ugki vtwm'; // SMTP password (use App Password if 2-Step Verification is enabled)
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+
+                //Recipients
+                $mail->setFrom('snowshoe0103@gmail.com', 'Mailer');
+                $mail->addAddress($email, $name);
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = 'Password Reset Request';
+                $mail->Body    = "Hi $name, Click the link below to reset your password: 
+                                  <a href='http://localhost/public_html/reset_password.php?token=$token'>Reset Password</a>";
+
+                $mail->send();
+                $_SESSION['success'] = 'Password reset link has been sent to your email.';
+                echo "<script>$(document).ready(function() { $('#successModal').modal('show'); });</script>";
+            } catch (Exception $e) {
+                $error[] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
             }
         } else {
-            // Incorrect password
-            $error[] = 'Incorrect password!';
+            $error[] = 'Failed to save the token! MySQL Error: ' . mysqli_error($conn);
         }
     } else {
-        // Username does not exist
-        $error[] = 'No user found with this username!';
+        $error[] = 'No user found with this email address!';
     }
 }
 
@@ -41,8 +68,6 @@ if (isset($error)) {
     }
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -101,21 +126,20 @@ if (isset($error)) {
                   <h1 class="card-title text-center pb-0 fs-4">Forgot your Password?</h1>
                   </div>
 
-                  <form class="row g-3 " method="POST" action="login_form.php">
+                  <form class="row g-3 " method="POST" action="forgot_pass.php">
                     <?php
                     if(isset($error)) { 
                       foreach($error as $error){
-                        echo '<span class=error-msg">' . $error .'</span>';
+                        echo '<span class="error-msg">' . $error .'</span>';
                       };
                     }
-                    
                     ?>
 
-<form action="forgot_pass2.php" method="post">
-  <label for="email" class="card-title">Enter your email address:</label>
-  <input type="email" id="email" name="email" class="form-control"required>
-  <button type="submit" class="btn btn-primary">Send Reset Link</button>
-</form>
+                    <form action="forgot_pass.php" method="post">
+                      <label for="email" class="card-title">Enter your email address:</label>
+                      <input type="email" id="email" name="email" class="form-control" required>
+                      <button type="submit" name="submit" class="btn btn-primary">Send Reset Link</button>
+                    </form>
 
                 </div>
               </div>
@@ -132,6 +156,24 @@ if (isset($error)) {
 
     </div>
   </main><!-- End #main -->
+
+  <!-- Success Modal -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="successModalLabel">Success</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Password reset link has been sent to your email.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

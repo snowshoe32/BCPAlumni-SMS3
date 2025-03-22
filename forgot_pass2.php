@@ -1,4 +1,10 @@
 <?php
+session_start();
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
+    header('Location: index.php');
+    exit();
+}
+
 // Include database connection and any required files
 include 'db_conn.php'; // Assuming a separate file for db connection
 include 'email_functions.php'; // Assuming you have an email sending utility

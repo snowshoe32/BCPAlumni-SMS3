@@ -1,28 +1,29 @@
 <?php
 session_start();
-include "db_conn.php";
-
-if (!isset($_SESSION['admin_name'])) {
-  header('Location: index.php');
-  exit();
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
+    header('Location: index.php');
+    exit();
 }
+
+include "db_conn.php";
 
 $admin_name = $_SESSION['admin_name'];
 
-if (isset($result) && $result) {
-  if (mysqli_num_rows($result) > 0) {
-      $row = mysqli_fetch_array($result);
-      
-  } else {
-      echo "No admin found with the username: " . htmlspecialchars($admin_name);
-  }
-} else {
-  echo "MySQL Error: " . mysqli_error($conn);
+// Fetch data from the API
+$api_url = 'https://sis.bcpsms3.com/api/alumni';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $api_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+$response = curl_exec($ch);
+curl_close($ch);
+
+$alumni_data = json_decode($response, true);
+
+if ($alumni_data === null) {
+    echo "Error fetching data from API.";
+    exit();
 }
 ?>
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -66,287 +67,179 @@ if (isset($result) && $result) {
   </head>
 
   <body>
-    <!-- ======= Header ======= -->
-    <header id="header" class="header fixed-top d-flex align-items-center">
-      <div class="d-flex align-items-center justify-content-between">
-        <i class="bi bi-list toggle-sidebar-btn"></i>
-      </div>
-      <!-- End Logo -->
+     <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
 
-      <nav class="header-nav ms-auto">
-        <ul class="d-flex align-items-center">
-          <li class="nav-item dropdown pe-3">
-            <a
-              class="nav-link nav-profile d-flex align-items-center pe-0"
-              href="#"
-              data-bs-toggle="dropdown"
-            >
-              <img
-                src="assets/img/profile-img.jpg"
-                alt="Profile"
-                class="rounded-circle"
-              />
-              <span class="d-none d-md-block dropdown-toggle ps-2"
-                ><?php echo $_SESSION['admin_name'] ?></span
-              > </a
-            ><!-- End Profile Iamge Icon -->
+<div class="d-flex align-items-center justify-content-between">
+  <i class="bi bi-list toggle-sidebar-btn"></i>
+</div><!-- End Logo -->
 
-            <ul
-              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile"
-            >
-              <li class="dropdown-header">
-                <h6><?php echo $_SESSION['admin_name'] ?></h6>
-                <span>Web Designer</span>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
+<nav class="header-nav ms-auto">
+  <ul class="d-flex align-items-center">
 
-              <li>
-                <a
-                  class="dropdown-item d-flex align-items-center"
-                  href="users-profile.html"
-                >
-                  <i class="bi bi-person"></i>
-                  <span>My Profile</span>
-                </a>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
+    <li class="nav-item dropdown pe-3">
 
-              <li>
-                <a
-                  class="dropdown-item d-flex align-items-center"
-                  href="users-profile.html"
-                >
-                  <i class="bi bi-gear"></i>
-                  <span>Account Settings</span>
-                </a>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
+      <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
 
-              <li>
-                <a
-                  class="dropdown-item d-flex align-items-center"
-                  href="pages-faq.html"
-                >
-                  <i class="bi bi-question-circle"></i>
-                  <span>Need Help?</span>
-                </a>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
+        <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'] ?></span>
+      </a><!-- End Profile Iamge Icon -->
 
-              <li>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <i class="bi bi-box-arrow-right"></i>
-                  <span>Sign Out</span>
-                </a>
-              </li>
-            </ul>
-            <!-- End Profile Dropdown Items -->
-          </li>
-          <!-- End Profile Nav -->
-        </ul>
-      </nav>
-      <!-- End Icons Navigation -->
-    </header>
-    <!-- End Header -->
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+        <li class="dropdown-header">
+          <h6><?php echo isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'] ?></h6>
+          <span></span>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
 
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
-      <ul class="sidebar-nav" id="sidebar-nav">
-        <div
-          class="flex items-center w-full p-1 pl-6"
-          style="
-            display: flex;
-            align-items: center;
-            padding: 3px;
-            width: 40px;
-            background-color: transparent;
-            height: 4rem;
-          "
-        >
-          <div
-            class="flex items-center justify-center"
-            style="display: flex; align-items: center; justify-content: center"
-          >
-            <img
-              src="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png"
-              alt="Logo"
-              style="width: 30px; height: auto"
-            />
-          </div>
-        </div>
+   
+    
 
-        <div
-          style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 16px;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              width: 96px;
-              height: 96px;
-              border-radius: 50%;
-              background-color: #334155;
-              color: #e2e8f0;
-              font-size: 48px;
-              font-weight: bold;
-              text-transform: uppercase;
-              line-height: 1;
-            "
-          >
-            LC
-          </div>
-          <div
-            style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              margin-top: 24px;
-              text-align: center;
-            " 
-          >
-            <div style="font-weight: 500; color: #fff"><?php echo $_SESSION['admin_name'] ?></div>
-            <div style="margin-top: 4px; font-size: 14px; color: #fff">ID</div>
-          </div>
-        </div>
-
-        <hr class="sidebar-divider" />
-
-        <li class="nav-item">
-          <a class="nav-link" href="admin_dashboard.php">
-            <i class="bi bi-grid"></i>
-            <span>Dashboard</span>
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
           </a>
         </li>
-        <!-- End Dashboard Nav -->
 
-        <hr class="sidebar-divider" />
+      </ul><!-- End Profile Dropdown Items -->
+    </li><!-- End Profile Nav -->
 
-        <li class="nav-heading">Your System</li>
-
-        <li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#system-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Data</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="system-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="student-data.php" class="active">
-        <i class="bi bi-circle"></i><span>Manage Alumni Data</span>
-      </a>
-    </li> 
-    <li>
-      <a href="add.php">
-        <i class="bi bi-circle"></i><span>Add new Alumni</span>
-      </a>
-    </li>
   </ul>
-</li><!-- End System Nav -->
+</nav><!-- End Icons Navigation -->
 
-        <hr class="sidebar-divider" />
+</header><!-- End Header -->
 
-           <!-- Events Management Nav -->
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#events-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Events</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="events-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="add_events.php">
-        <i class="bi bi-circle"></i><span>Add Events</span>
-      </a>
-    </li>
-    <li>
-      <a href="upcoming_events.php">
-        <i class="bi bi-circle"></i><span>Manage Events</span>
-      </a>
-    </li>
-    <li>
-    </li>
-  </ul>
-</li><!-- End Events Management Nav -->
-      
+    <!-- ======= Sidebar ======= -->
+   <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+<ul class="sidebar-nav" id="sidebar-nav">
+
+
+
+
+        <!-- Removed LC -->
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; text-align: center;">
+      <div style="font-weight: 500; color: #fff;">
+        <!-- Removed echo name -->
+      </div>
+      <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
+        <img src="assets/img/bestlinkalumnilogo1.png" alt="Bestlink Alumni Logo" style="width:130px;height: auto;">
+      </div>
+    </div>
+    <div style="margin-top: 4px; font-size: 14px; color: #fff;">
+      <h6> <span> <!-- Removed echo name --></span></h6>
+    </div>
+  </div>
+</div>
+
 <hr class="sidebar-divider">
 
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Career Opportunities</span><i class="bi bi-chevron-down ms-auto"></i>
+  <li class="nav-item">
+    <a class="nav-link " href="admin_dashboard.php" class="active">
+      <i class="bi bi-grid"></i>
+      <span>Dashboard</span>
+    </a>
+  </li><!-- End Dashboard Nav -->
+
+  <hr class="sidebar-divider">
+
+  <li class="nav-heading"></li>
+
+  <li class="nav-item">
+<a class="nav-link collapsed" data-bs-target="#alumnidata-nav" data-bs-toggle="collapse" href="#">
+<i class="bi bi-layout-text-window-reverse"></i><span>Alumni Data</span><i class="bi bi-chevron-down ms-auto"></i>
+</a>
+<ul id="alumnidata-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+<li>
+  <a href="student-data.php">
+    <i class="bi bi-circle"></i><span>Alumni Data</span>
   </a>
-  <ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="event-data.php">
-        <i class="bi bi-circle"></i><span>Manage Job Posting</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Add Job Posting</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Manage Job Applications</span>
-      </a>
-    </li>
-  </ul>
+</li> 
+<li>
+  <a href="add.php">
+    <i class="bi bi-circle"></i><span>Add Alumni Data</span>
+  </a>
+</li>
+</ul>
+</li><!-- End System Nav -->
+  <hr class="sidebar-divider">
+
+<li class="nav-item">
+<a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
+<i class="bi bi-layout-text-window-reverse"></i><span>Career Opportunities</span><i class="bi bi-chevron-down ms-auto"></i>
+</a>
+<ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+<li>
+  <a href="job-post-manage.php">
+    <i class="bi bi-circle"></i><span>Job Posting</span>
+  </a>
+</li>
+<li>
+  <a href="job-post-add.php">
+    <i class="bi bi-circle"></i><span>Add Job Posting</span>
+  </a>
+</li>
+</ul>
 <!-- Career Opportunities -->
 
 <hr class="sidebar-divider">
 
 <li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+</a>
+<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+<li>
+  <a href="id_manage.php">
+    <i class="bi bi-circle"></i><span>ID Applications</span>
   </a>
-  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="event-data.php">
-        <i class="bi bi-circle"></i><span>Manage Alumni Applications</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>News & Announcements</span>
-      </a>
-    </li>
-  </ul>
 </li>
-<!--Student Alumni Services-->
-<hr class="sidebar-divider" />
-         
+<li>
+  <a href="admin_tracer.php">
+    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+  </a>
+</li>
+<li>
+  <a href="admin_managenews.php">
+    <i class="bi bi-circle"></i><span>News & Announcements</span>
+  </a>
+</li>
 
-        <li class="nav-heading">Pages</li>
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="users-profile.html">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-          </a>
-        </li>
-        <!-- End Profile Page Nav -->
+</ul>
+</li>
 
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-contact.html">
-            <i class="bi bi-envelope"></i>
-            <span>Contact</span>
-          </a>
-        </li>
-        <!-- End Contact Page Nav -->
-         
-    </aside>
-    <!-- End Sidebar-->
+  <hr class="sidebar-divider">
+
+
+<li class="nav-item">
+    <a class="nav-link " href="accesscontrol.php" class="active">
+      <i class="bi bi-shield-lock"></i>
+      <span>Access Control</span>
+    </a>
+  </li><!-- End Dashboard Nav -->
+
+  <hr class="sidebar-divider">
+
+  <li class="nav-item">
+    <a class="nav-link " href="auditlogs.php" class="active">
+      <i class="bi bi-file-earmark-text"></i>
+      <span>Audit Logs</span>
+    </a>
+  </li><!-- End Dashboard Nav -->
+
+  <hr class="sidebar-divider">
+ 
+
+<!-- Remove Profile and Contact links -->
+<!-- End Profile Page Nav -->
+<!-- End Contact Page Nav -->
+
+</aside><!-- End Sidebar-->
 
     <main id="main" class="main">
       <div class="pagetitle">
@@ -392,36 +285,32 @@ if (isset($result) && $result) {
       <th scope="col">Last Name</th>
       <th scope="col">First Name</th>
       <th scope="col">Middle Name</th>
-      <th scope="col">Student Number</th>
       <th scope="col">Gender</th>
       <th scope="col" data-type="date" data-format="DD/MM/YYYY">Date of Birth</th>
       <th scope="col">Email</th>
       <th scope="col">Contact</th>
+      <th scope="col">Current Address</th>
       <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
     <?php
-    include "db_conn.php";
-    $sql = "SELECT * FROM `bcp-sms3_alumnidata`";
-    $result = mysqli_query($conn, $sql);
-    while ($row = mysqli_fetch_assoc($result)){ 
+    foreach ($alumni_data['data'] as $row) {
       $birthdate = $row['birthdate'];
       $formatted_date = date("m/d/Y", strtotime($birthdate));
-      $truncated_email = substr($row['email'], 0, 10) . '...';
+      $truncated_email = substr($row['email_address'], 0, 10) . '...';
     ?>
-      
       <tr>
       <td><?php echo $row['id'] ?></td>
-      <td><?php echo $row['lname'] ?></td>
-      <td><?php echo $row['fname'] ?></td>
-      <td><?php echo $row['mname'] ?></td>
-      <td><?php echo $row['student_no'] ?></td>
+      <td><?php echo $row['last_name'] ?></td>
+      <td><?php echo $row['first_name'] ?></td>
+      <td><?php echo $row['middle_name'] ?></td>
       <td><?php echo $row['gender'] ?></td>  
        <!-- Output the formatted date instead of the raw birthdate -->
-       <td><?php echo $formatted_date; ?></td> <!-- Change made here -->
+       <td><?php echo $formatted_date; ?></td>
       <td><?php echo $truncated_email; ?></td>
-      <td><?php echo $row['contact'] ?></td>
+      <td><?php echo $row['contact_number'] ?></td>
+      <td><?php echo $row['current_address'] ?></td>
       <td>
       <a href="viewdata.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
         <a href="edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>

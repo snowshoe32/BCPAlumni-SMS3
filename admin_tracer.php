@@ -1,24 +1,30 @@
 <?php
 session_start();
-include "db_conn.php";
-
 if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
-  header('Location: index.php');
-  exit();
+    header('Location: index.php');
+    exit();
 }
 
-$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'];
+// Include the database connection file
+include 'db_conn.php';
 
-if (isset($result) && $result) {
-  if (mysqli_num_rows($result) > 0) {
-      $row = mysqli_fetch_array($result);
-      
-  } else {
-      echo "No admin found with the username: " . htmlspecialchars($admin_name);
-  }
+$admin_name = $_SESSION['admin_name'] ?? $_SESSION['super_admin_name'];
+
+// Fetch data from the database
+$sql = "SELECT id, lastName, firstName, studentNo, email, gender, homeAddress, placeOfWork, currentJobPosition FROM `bcp-sms3_tracer` WHERE 1";
+$result = $conn->query($sql);
+
+$tracer_data = [];
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $tracer_data['data'][] = $row;
+    }
 } else {
-  echo "MySQL Error: " . mysqli_error($conn);
+    echo "0 results";
+    exit();
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +70,8 @@ if (isset($result) && $result) {
 
   <body>
     <!-- ======= Header ======= -->
+   
+     <!-- ======= Header ======= -->
   <header id="header" class="header fixed-top d-flex align-items-center">
 
 <div class="d-flex align-items-center justify-content-between">
@@ -106,6 +114,7 @@ if (isset($result) && $result) {
 </nav><!-- End Icons Navigation -->
 
 </header><!-- End Header -->
+    <!-- End Header -->
 
     <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
@@ -237,16 +246,14 @@ if (isset($result) && $result) {
 </aside><!-- End Sidebar-->
 
 
-    <!-- End Sidebar-->
-
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>News & Announcements</h1>
+        <h1>Data Tables</h1>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.html">Home</a></li>
             <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">News</li>
+            <li class="breadcrumb-item active">Data</li>
           </ol>
         </nav>
       </div>
@@ -257,10 +264,10 @@ if (isset($result) && $result) {
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">News Archives</h5>
+                <h5 class="card-title">Datatables</h5>
                 <p>
                  
-                <a href="admin_news.php" class="btn btn-dark mb-3">Add New</a>
+                
                 
                 </p>
 
@@ -275,34 +282,39 @@ if (isset($result) && $result) {
                     </div>';
                   }
                   ?>
+                  <a href="tracer_form.php" class="btn btn-dark mb-3">Add New</a>
                 <table class="table datatable  table-hover text-center">
   <thead class="table">
     <tr>
       <th scope="col">ID</th>
-      <th scope="col">Headline</th>
-      <th scope="col">Publisher</th>
-      <th scope="col">Date</th>
+      <th scope="col">Last Name</th>
+      <th scope="col">First Name</th>
+      <th scope="col">Student No</th>
+      <th scope="col">Email</th>
+      <th scope="col">Gender</th>
+      <th scope="col">Home Address</th>
+      <th scope="col">Place of Work</th>
+      <th scope="col">Current Job Position</th>
       <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
     <?php
-    include "db_conn.php";
-    $sql = "SELECT * FROM `bcp-sms3_news`";
-    $result = mysqli_query($conn, $sql);
-    while ($row = mysqli_fetch_assoc($result)){ 
-        $date = $row['date'];
-      $formatted_date = date("m/d/Y", strtotime($date));
-      
+    foreach ($tracer_data['data'] as $row) {
+      $truncated_email = substr($row['email'], 0, 10) . '...';
     ?>
-      
       <tr>
       <td><?php echo $row['id'] ?></td>
-      <td><?php echo $row['headline'] ?></td>
-      <td><?php echo $row['publisher'] ?></td>
-      <td><?php echo $formatted_date; ?></td> 
+      <td><?php echo $row['lastName'] ?></td>
+      <td><?php echo $row['firstName'] ?></td>
+      <td><?php echo $row['studentNo'] ?></td>
+      <td><?php echo $truncated_email; ?></td>
+      <td><?php echo $row['gender'] ?></td>
+      <td><?php echo $row['homeAddress'] ?></td>
+      <td><?php echo $row['placeOfWork'] ?></td>
+      <td><?php echo $row['currentJobPosition'] ?></td>
       <td>
-      <a href="viewdata.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
+      <a href="view_tracer.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
         <a href="edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
         <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
   <i class="bx bxs-trash"></i>

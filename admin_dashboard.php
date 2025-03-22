@@ -2,34 +2,89 @@
 session_start();
 include 'db_conn.php';
 
-
-
-if(!isset($_SESSION['admin_name'])){
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
     header('Location:index.php');
     exit();
-    
 }
-$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Guest';
 
+$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : (isset($_SESSION['super_admin_name']) ? $_SESSION['super_admin_name'] : 'Guest');
 
+// Log user login action (Moved inside the successful login check)
+$userType = isset($_SESSION['admin_name']) ? 'admin' : 'super_admin';
+$studentNo = ''; // Fetch from the database if needed
+$name = ''; // Fetch from the database if needed
+$ipAddress = $_SERVER['REMOTE_ADDR']; // Get the user's IP address
 
-$sql = "SELECT * FROM bcp_sms3_user WHERE username = '$admin_name'";
-$result = mysqli_query($conn, $sql);
+// Check if IP address is too long
+if (strlen($ipAddress) > 45) {
+    $ipAddress = substr($ipAddress, 0, 45); // Truncate to 45 characters if longer
+}
 
+// Fetch user details for logging
+$username = $admin_name; // Use the logged-in username
+$sql_user_details = "SELECT name, student_no FROM bcp_sms3_user WHERE username = ?";
+$stmt_user_details = $conn->prepare($sql_user_details);
+$stmt_user_details->bind_param("s", $username);
+$stmt_user_details->execute();
+$result_user_details = $stmt_user_details->get_result();
+
+if ($result_user_details && $result_user_details->num_rows > 0) {
+    $user_details = $result_user_details->fetch_assoc();
+    $name = $user_details['name'];
+    $studentNo = $user_details['student_no'];
+}
+$stmt_user_details->close();
+
+// **CHECK IF LOGGED IN ALREADY**
+// Check if the user has already logged in during this session
+if (!isset($_SESSION['logged_in'])) {
+    // If not, log the login event and set the session variable
+    if (isset($_SESSION['admin_name']) || isset($_SESSION['super_admin_name'])) {
+        $sql_log = "INSERT INTO `bcp-sms3_auditlogs` (user_type, student_no, username, name, event, timestamp, resource_access, ip_address) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)";
+        $stmt_log = $conn->prepare($sql_log);
+
+        $action = "Logging in";
+        $resource = "System";
+        $stmt_log->bind_param("sssssss", $userType, $studentNo, $username, $name, $action, $resource, $ipAddress);
+        $stmt_log->execute();
+
+        $stmt_log->close();
+        $_SESSION['logged_in'] = true; // Set the session variable to indicate login has been logged
+    }
+}
+
+$sql = "SELECT * FROM bcp_sms3_user WHERE username = ?";
+$stmt_user = $conn->prepare($sql);
+$stmt_user->bind_param("s", $admin_name);
+$stmt_user->execute();
+$result = $stmt_user->get_result();
 
 if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
         // Other logic for the admin dashboard
     } else {
         echo "No admin found with the username: " . htmlspecialchars($admin_name);
     }
 } else {
+    echo "MySQL Error: " . $conn->error;
+}
+$stmt_user->close();
+
+// Fetch the count of alumni registered
+$alumni_count_sql = "SELECT COUNT(*) as alumni_count FROM bcp_sms3_user WHERE user_type = 'alumni'";
+$alumni_count_result = mysqli_query($conn, $alumni_count_sql);
+$alumni_count = 0;
+
+if ($alumni_count_result) {
+    $alumni_count_row = mysqli_fetch_assoc($alumni_count_result);
+    $alumni_count = $alumni_count_row['alumni_count'];
+} else {
     echo "MySQL Error: " . mysqli_error($conn);
 }
-
-
 ?>
+
+<!-- Rest of your HTML code (unchanged) -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -80,48 +135,21 @@ if ($result) {
         <li class="nav-item dropdown pe-3">
 
           <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-            <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $_SESSION['admin_name'] ?></span>
+    
+            <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'] ?></span>
           </a><!-- End Profile Iamge Icon -->
 
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
             <li class="dropdown-header">
-              <h6><?php echo $_SESSION['admin_name'] ?></h6>
-              <span>Web Designer</span>
+              <h6><?php echo isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'] ?></h6>
+              <span></span>
             </li>
             <li>
               <hr class="dropdown-divider">
             </li>
 
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                <i class="bi bi-person"></i>
-                <span>My Profile</span>
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                <i class="bi bi-gear"></i>
-                <span>Account Settings</span>
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
-                <i class="bi bi-question-circle"></i>
-                <span>Need Help?</span>
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
+       
+        
 
             <li>
               <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
@@ -143,25 +171,23 @@ if ($result) {
 
     <ul class="sidebar-nav" id="sidebar-nav">
 
-      <div class="flex items-center w-full p-1 pl-6" style="display: flex; align-items: center; padding: 3px; width: 40px; background-color: transparent; height: 4rem;">
-        <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center;">
-            <img src="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" alt="Logo" style="width: 30px; height: auto;">
-        </div>
-      </div>
+   
 
-      <div style="display: flex; flex-direction: column; align-items: center; padding: 16px;">
-        <div style="display: flex; align-items: center; justify-content: center; width: 96px; height: 96px; border-radius: 50%; background-color: #334155; color: #e2e8f0; font-size: 48px; font-weight: bold; text-transform: uppercase; line-height: 1;">
-            LC
+
+            <!-- Removed LC -->
         </div>
         <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; text-align: center;">
-    <div style="font-weight: 500; color: #fff;">
-    
-    </div>
-</div>
-            <div style="margin-top: 4px; font-size: 14px; color: #fff;">
-                <h6> <span> <?php echo $_SESSION['admin_name'] ?></span></h6>
-            </div>
+          <div style="font-weight: 500; color: #fff;">
+            <!-- Removed echo name -->
+          </div>
+          <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
+            <img src="assets/img/bestlinkalumnilogo1.png" alt="Bestlink Alumni Logo" style="width:130px;height: auto;">
+          </div>
         </div>
+        <div style="margin-top: 4px; font-size: 14px; color: #fff;">
+          <h6> <span> <!-- Removed echo name --></span></h6>
+        </div>
+      </div>
     </div>
 
     <hr class="sidebar-divider">
@@ -175,7 +201,7 @@ if ($result) {
 
       <hr class="sidebar-divider">
 
-      <li class="nav-heading">Your System</li>
+      <li class="nav-heading"></li>
 
       <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#alumnidata-nav" data-bs-toggle="collapse" href="#">
@@ -184,41 +210,17 @@ if ($result) {
   <ul id="alumnidata-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
     <li>
       <a href="student-data.php">
-        <i class="bi bi-circle"></i><span>Manage Alumni Data</span>
+        <i class="bi bi-circle"></i><span>Alumni Data</span>
       </a>
     </li> 
     <li>
       <a href="add.php">
-        <i class="bi bi-circle"></i><span>Add new Alumni</span>
+        <i class="bi bi-circle"></i><span>Add Alumni Data</span>
       </a>
     </li>
   </ul>
 </li><!-- End System Nav -->
       <hr class="sidebar-divider">
-
-
-     <!-- Events Management Nav -->
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#events-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Events</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="events-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="add_events.php">
-        <i class="bi bi-circle"></i><span>Add Events</span>
-      </a>
-    </li>
-    <li>
-      <a href="upcoming_events.php">
-        <i class="bi bi-circle"></i><span>Manage Events</span>
-      </a>
-    </li>
-    <li>
-    </li>
-  </ul>
-</li><!-- End Events Management Nav -->
-      
-<hr class="sidebar-divider">
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
@@ -227,7 +229,7 @@ if ($result) {
   <ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
       <a href="job-post-manage.php">
-        <i class="bi bi-circle"></i><span>Manage Job Posting</span>
+        <i class="bi bi-circle"></i><span>Job Posting</span>
       </a>
     </li>
     <li>
@@ -247,7 +249,12 @@ if ($result) {
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
       <a href="id_manage.php">
-        <i class="bi bi-circle"></i><span>Manage Alumni ID Applications</span>
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
       </a>
     </li>
     <li>
@@ -255,79 +262,36 @@ if ($result) {
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
+  
   </ul>
 </li>
-<!--Student Alumni Services-->
 
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#resource-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Resource Library</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="resource-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="event-data.php">
-        <i class="bi bi-circle"></i><span>Upload & Manage Documents</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Share Resources</span>
-      </a>
-    </li>
-  </ul>
-</li>
-<!--Resource Library-->
-
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#roles-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Roles & Permissions</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="roles-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="event-data.php">
-        <i class="bi bi-circle"></i><span>Admin & User Management</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>User Activity Logs</span>
-      </a>
-    </li>
-  </ul>
-</li>
-<!--User Roles & Permissions-->
 
       <hr class="sidebar-divider">
 
-      <li class="nav-heading">Pages</li>
 
-       <li class="nav-item">
-        <a class="nav-link collapsed" href="id_forms.php">
-          <i class="bi bi-person"></i>
-          <span>User ID Form</span>
+<li class="nav-item">
+        <a class="nav-link " href="accesscontrol.php" class="active">
+          <i class="bi bi-shield-lock"></i>
+          <span>Access Control</span>
         </a>
-      </li>
-       <!--User ID Form-->
+      </li><!-- End Dashboard Nav -->
+
+      <hr class="sidebar-divider">
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="users-profile.html">
-          <i class="bi bi-person"></i>
-          <span>Profile</span>
+        <a class="nav-link " href="auditlogs.php" class="active">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Audit Logs</span>
         </a>
-      </li><!-- End Profile Page Nav -->
+      </li><!-- End Dashboard Nav -->
 
+      <hr class="sidebar-divider">
+     
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="pages-contact.html">
-          <i class="bi bi-envelope"></i>
-          <span>Contact</span>
-        </a>
-      </li><!-- End Contact Page Nav -->
-
+<!-- Remove Profile and Contact links -->
+<!-- End Profile Page Nav -->
+<!-- End Contact Page Nav -->
 
   </aside><!-- End Sidebar-->
 
@@ -446,8 +410,8 @@ if ($result) {
                       <i class="bi bi-people"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>1244</h6>
-                      <span class="text-danger small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">decrease</span>
+                      <h6><?php echo $alumni_count; ?></h6>
+                      <span class="text-success small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">increase</span>
 
                     </div>
                   </div>
@@ -516,99 +480,53 @@ if ($result) {
               <h5 class="card-title">Recent Activity <span>| Today</span></h5>
 
               <div class="activity">
+                <?php
+                include 'db_conn.php';
+                $sql = "SELECT user_type, username, event, timestamp FROM `bcp-sms3_auditlogs` ORDER BY timestamp DESC LIMIT 10";
+                $result = $conn->query($sql);
 
+                if ($result->num_rows > 0) {
+                    while ($log = $result->fetch_assoc()) {
+                        $action_class = '';
+                        switch ($log['event']) {
+                            case 'Logging in':
+                                $action_class = 'text-success';
+                                break;
+                            case 'Submitting an ID application':
+                                $action_class = 'text-info';
+                                break;
+                            case 'Applying for alumni tracer':
+                                $action_class = 'text-primary';
+                                break;
+                            case 'Editing data':
+                                $action_class = 'text-warning';
+                                break;
+                            case 'Deleting data':
+                                $action_class = 'text-danger';
+                                break;
+                            default:
+                                $action_class = 'text-muted';
+                                break;
+                        }
+                ?>
                 <div class="activity-item d-flex">
-                  <div class="activite-label">32 min</div>
-                  <i class='bi bi-circle-fill activity-badge text-success align-self-start'></i>
+                  <div class="activite-label"><?php echo $log['timestamp']; ?></div>
+                  <i class='bi bi-circle-fill activity-badge <?php echo $action_class; ?> align-self-start'></i>
                   <div class="activity-content">
-                    Quia quae rerum <a href="#" class="fw-bold text-dark">explicabo officiis</a> beatae
+                    <?php echo $log['user_type']; ?> <?php echo $log['username']; ?> performed <span class="fw-bold"><?php echo $log['event']; ?></span>
                   </div>
                 </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">56 min</div>
-                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
-                  <div class="activity-content">
-                    Voluptatem blanditiis blanditiis eveniet
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">2 hrs</div>
-                  <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
-                  <div class="activity-content">
-                    Voluptates corrupti molestias voluptatem
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">1 day</div>
-                  <i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
-                  <div class="activity-content">
-                    Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">2 days</div>
-                  <i class='bi bi-circle-fill activity-badge text-warning align-self-start'></i>
-                  <div class="activity-content">
-                    Est sit eum reiciendis exercitationem
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div>
-               
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div>
-                
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div>
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div>
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div>
-
-              </div>
+                <?php
+                    }
+                } else {
+                    echo "<div class='activity-item d-flex'><div class='activity-content'>No recent activity found.</div></div>";
+                }
+                $conn->close();
+                ?>
               </div>
             </div>
-          </div><!-- End Recent Activity -->
+          </div>
+        </div><!-- End Recent Activity -->
 
         <!-- Right side columns -->
      
@@ -631,7 +549,7 @@ if ($result) {
               </ul>
             </div>
 
-            <div class="card-body pb-0">
+            <div class="card-body pb-0"></div>
               <h5 class="card-title">Recent News &amp; Updates <span>| Today</span></h5>
 
               <div class="news">
@@ -647,19 +565,19 @@ if ($result) {
                   <p>Illo nemo neque maiores vitae officiis cum eum turos elan dries werona nande...</p>
                 </div>
 
-                <div class="post-item clearfix">
+                <div class="post-item clearfix"></div>
                   <img src="assets/img/news-3.jpg" alt="">
                   <h4><a href="#">Id quia et et ut maxime similique occaecati ut</a></h4>
                   <p>Fugiat voluptas vero eaque accusantium eos. Consequuntur sed ipsam et totam...</p>
                 </div>
 
-                <div class="post-item clearfix">
+                <div class="post-item clearfix"></div>
                   <img src="assets/img/news-4.jpg" alt="">
                   <h4><a href="#">Laborum corporis quo dara net para</a></h4>
                   <p>Qui enim quia optio. Eligendi aut asperiores enim repellendusvel rerum cuder...</p>
                 </div>
 
-                <div class="post-item clearfix">
+                <div class="post-item clearfix"></div>
                   <img src="assets/img/news-5.jpg" alt="">
                   <h4><a href="#">Et dolores corrupti quae illo quod dolor</a></h4>
                   <p>Odit ut eveniet modi reiciendis. Atque cupiditate libero beatae dignissimos eius...</p>
@@ -674,6 +592,161 @@ if ($result) {
 
       </div>
     </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Event Data</h2>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody id="events-table-body">
+            <!-- Data will be populated here by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      fetch('api/events.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            console.error(data.error);
+          } else {
+            const tableBody = document.getElementById('events-table-body');
+            data.forEach(event => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${event.id}</td>
+                <td>${event.title}</td>
+                <td>${event.date}</td>
+                <td>${event.location}</td>
+              `;
+              tableBody.appendChild(row);
+            });
+
+            // Filter and display only "Alumni" specific events for the Event Status chart
+            const alumniEvents = data.filter(event => event.title.includes('Alumni'));
+            const eventStatusData = {
+              labels: ['Cancelled', 'Upcoming', 'Ongoing', 'Ended'],
+              datasets: [{
+                label: 'Event Status',
+                data: [
+                  alumniEvents.filter(event => event.status === 'Cancelled').length,
+                  alumniEvents.filter(event => event.status === 'Upcoming').length,
+                  alumniEvents.filter(event => event.status === 'Ongoing').length,
+                  alumniEvents.filter(event => event.status === 'Ended').length
+                ],
+                backgroundColor: [
+                  'rgb(255, 99, 132)',
+                  'rgb(54, 162, 235)',
+                  'rgb(255, 205, 86)',
+                  'rgb(198, 198, 198)'
+                ],
+                hoverOffset: 4
+              }]
+            };
+
+            new Chart(document.querySelector('#pieChart'), {
+              type: 'pie',
+              data: eventStatusData
+            });
+          }
+        })
+        .catch(error => console.error('Error fetching event data:', error));
+    });
+    </script>
+
+    <section class="section">
+      <div class="container">
+        <h2>Holidays</h2>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Reason</th>
+              <th>Booking Date</th>
+            </tr>
+          </thead>
+          <tbody id="holidays-table-body">
+            <!-- Data will be populated here by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Reservations</h2>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Event Description</th>
+              <th>User Count</th>
+            </tr>
+          </thead>
+          <tbody id="reservations-table-body">
+            <!-- Data will be populated here by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      fetch('api/holidays.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            console.error(data.error);
+          } else {
+            const tableBody = document.getElementById('holidays-table-body');
+            data.forEach(holiday => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${holiday.id}</td>
+                <td>${holiday.date}</td>
+                <td>${holiday.reason}</td>
+                <td>${holiday.bdate}</td>
+              `;
+              tableBody.appendChild(row);
+            });
+          }
+        })
+        .catch(error => console.error('Error fetching holidays data:', error));
+
+      fetch('api/reservations.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            console.error(data.error);
+          } else {
+            const tableBody = document.getElementById('reservations-table-body');
+            data.forEach(reservation => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${reservation.rdate}</td>
+                <td>${reservation.rtime}</td>
+                <td>${reservation.event_description}</td>
+                <td>${reservation.ucount}</td>
+              `;
+              tableBody.appendChild(row);
+            });
+          }
+        })
+        .catch(error => console.error('Error fetching reservations data:', error));
+    });
+    </script>
 
   </main><!-- End #main -->
 

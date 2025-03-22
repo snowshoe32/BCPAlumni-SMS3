@@ -3,6 +3,10 @@
 include "db_conn.php"; 
 session_start();
 
+if (isset($_GET['success'])) {
+    echo "<div class='alert alert-success'>" . htmlspecialchars($_GET['success']) . "</div>";
+}
+
 if (isset($_POST['submit'])) {
     
     $username = mysqli_real_escape_string($conn, $_POST['username']);
@@ -14,19 +18,27 @@ if (isset($_POST['submit'])) {
 
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_array($result);
-        // Verifying hashed password with input password
-        if (password_verify($password, $row['password'])) {
-            // Set session based on user type
-            if ($row['user_type'] == 'admin') {
-                $_SESSION['admin_name'] = $row['name'];
-                header('location:admin_dashboard.php');  
-            } else if ($row['user_type'] == 'user') {
-                $_SESSION['user_name'] = $row['name'];
-                header('location:user_dashboard.php');  
-            }
+        // Check if the account is verified
+        if ($row['is_verified'] == 0) {
+            $error[] = 'Your account is not verified. Please check your email.';
         } else {
-            // Incorrect password
-            $error[] = 'Incorrect password!';
+            // Verifying hashed password with input password
+            if (password_verify($password, $row['password'])) {
+                // Set session based on user type
+                if ($row['user_type'] == 'admin') {
+                    $_SESSION['admin_name'] = $row['name'];
+                    header('location:admin_dashboard.php');  
+                } else if ($row['user_type'] == 'alumni') {
+                    $_SESSION['alumni_name'] = $row['name'];
+                    header('location:alumni_dashboard.php');  
+                } else if ($row['user_type'] == 'super_admin') {
+                    $_SESSION['super_admin_name'] = $row['name'];
+                    header('location:admin_dashboard.php');  
+                }
+            } else {
+                // Incorrect password
+                $error[] = 'Incorrect password!';
+            }
         }
     } else {
         // Username does not exist
@@ -120,18 +132,19 @@ input[type="password"] {
     box-sizing: border-box;
 }
 
-.forgot-password {
-    text-align: right;
+.forgot-password, .register-link {
+    display: flex;
+    justify-content: space-between;
     margin-bottom: 20px;
 }
 
-.forgot-password a {
+.forgot-password a, .register-link a {
     color: #007BFF;
     text-decoration: none;
     font-size: 12px;
 }
 
-.forgot-password a:hover {
+.forgot-password a:hover, .register-link a:hover {
     text-decoration: underline;
 }
 
@@ -157,26 +170,27 @@ button:hover {
     </div>
     
     <div class="login-container">
-    <h2>Log Into Your Account</h2>
-    <?php if (!empty($error)): ?>
-        <div class="error-message" style="color: red;">
-            <?= $error ?>
-        </div>
-    <?php endif; ?>
-    <form id="loginForm" action="index.php" method="post">
-        <label for="yourUsername">Account ID</label>
-        <input type="text" id="yourUsername" name="username" required aria-label="Username">
+        <h2>Log Into Your Account</h2>
+      
+           
+        <form id="loginForm" action="index.php" method="post" autocomplete="off">
+            <label for="accountId">Username</label>
+            <input type="text" id="yourUsername" name="username" required aria-label="Username">
 
-        <label for="yourPassword">Password</label>
-        <input type="password" id="yourPassword" name="password" required aria-label="Password">
+            <label for="password">Password</label>
+            <input type="password" id="yourPassword" name="password" required aria-label="Password">
 
-        <div class="forgot-password">
-            <a href="forgot_pass.php" aria-label="Forgot password?">Forgot your password?</a>
-        </div>
+            <div class="forgot-password">
+                <a href="forgot_pass.php" aria-label="Forgot password?">Forgot your password?</a>
+            </div>
 
-        <button class="btn btn-primary w-100" type="submit" name="submit">LOGIN</button>
-    </form>
-</div>
+            <div class="register-link">
+                <a href="pages-register.php" aria-label="Register">Don't have an account? Register here</a>
+            </div>
+
+            <button class="btn btn-primary w-100" type="submit" name="submit">LOGIN</button>
+        </form>
+    </div>
 
     <script src="js/script.js"></script>
 </body>

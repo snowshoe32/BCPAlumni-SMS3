@@ -1,41 +1,73 @@
 <?php
 session_start();
 include "db_conn.php"; 
+require 'vendor/autoload.php'; // Include PHPMailer
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if (isset($_POST['submit'])) {
     
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $student_no = mysqli_real_escape_string($conn, $_POST['student_no']);
+    if (strlen($student_no) > 11) {
+        $error[] = 'Student Number must be a maximum of 11 characters!';
+    }
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Securely hashing the password
     $user_type = mysqli_real_escape_string($conn, $_POST['user_type']);
 
-    // Check if user already exists
+    // Check if email already exists
     $check_email = "SELECT * FROM `bcp_sms3_user` WHERE email = '$email'";
-    $result = mysqli_query($conn, $check_email);
+    $result_email = mysqli_query($conn, $check_email);
 
-    if (mysqli_num_rows($result) > 0) {
+    // Check if student number already exists
+    $check_student_no = "SELECT * FROM `bcp_sms3_user` WHERE student_no = '$student_no'";
+    $result_student_no = mysqli_query($conn, $check_student_no);
+
+    if (mysqli_num_rows($result_email) > 0) {
         $error[] = 'This Email is already registered!';
+    } elseif (mysqli_num_rows($result_student_no) > 0) {
+        $error[] = 'This Student Number is already taken!';
     } else {
-        
-        $sql = "INSERT INTO `bcp_sms3_user` (`name`, `email`, `username`, `password`, `user_type`) 
-                VALUES ('$name', '$email', '$username', '$password', '$user_type')";
+        $token = bin2hex(random_bytes(50)); // Generate a unique token
+        $sql = "INSERT INTO `bcp_sms3_user` (`name`, `email`, `student_no`, `password`,`username`, `user_type`, `token`, `is_verified`) 
+                VALUES ('$name', '$email', '$student_no', '$password','$username', '$user_type', '$token', 0)";
 
-        
         if (mysqli_query($conn, $sql)) {
-            
-            header('Location: login_form.php');
-            exit();
+            $mail = new PHPMailer(true);
+            try {
+                //Server settings
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com'; // Set the SMTP server to send through
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'snowshoe0103@gmail.com'; // SMTP username
+                $mail->Password   = 'bvoa zaxb ugki vtwm'; // SMTP password (use App Password if 2-Step Verification is enabled)
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+
+                //Recipients
+                $mail->setFrom('snowshoe0103@gmail.com', 'Mailer');
+                $mail->addAddress($email, $name);
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = 'Account Verification';
+                $mail->Body    = "Hi $name, Click the link below to verify your account: 
+                                  <a href='http://localhost/public_html/verify.php?token=$token'>Verify Account</a>";
+
+                $mail->send();
+                $_SESSION['success'] = 'Account created successfully! Please check your email to verify your account.';
+                echo "Account created successfully! Please check your email to verify your account.";
+                header("Location: index.php");
+                exit();
+            } catch (Exception $e) {
+                $error[] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            }
         } else {
-            
             $error[] = 'Failed to register the user! MySQL Error: ' . mysqli_error($conn);
         }
     }
-}
-if (!isset($_SESSION['access_granted']) || $_SESSION['access_granted'] !== true) {
-  // Redirect to the code entry page
-  header('Location: access-code-form.php');
-  exit();
 }
 
 if (isset($error)) {
@@ -89,7 +121,7 @@ if (isset($error)) {
               <div class="d-flex justify-content-center py-4">
                 <a href="index.html" class="logo d-flex align-items-center w-auto">
                   <img src="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" alt="Logo">
-                  <span class="d-none d-lg-block">Create an Account</span>
+                  <span class="d-none d-lg-block">Alumni Management System</span>
                 </a>
               </div><!-- End Logo -->
 
@@ -101,29 +133,29 @@ if (isset($error)) {
                 
                   
                   <div class="pt-4 pb-2">
-                    <h5 class="card-title text-center pb-0 fs-4">Create an Account</h5>
+                    <h5 class="card-title text-center pb-0 fs-4">Create a new Account</h5>
                     <p class="text-center small">Enter your personal details to create account</p>
                   </div>
 
                   <form class="row g-3" method="POST" action="pages-register.php">
     <div class="col-12">
         <label for="yourName" class="form-label">Full Name</label>
-        <input type="text" name="name" class="form-control" id="yourName" required>
+        <input type="text" name="name" class="form-control" id="yourName" required autocomplete="off">
         <div class="invalid-feedback">Please, enter your name!</div>
     </div>
 
     <div class="col-12">
         <label for="yourEmail" class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" id="yourEmail" required>
+        <input type="email" name="email" class="form-control" id="yourEmail" required autocomplete="off">
         <div class="invalid-feedback">Please enter a valid Email address!</div>
     </div>
 
     <div class="col-12">
-        <label for="yourUsername" class="form-label">Username</label>
+        <label for="yourStudentNo" class="form-label">Student Number</label>
         <div class="input-group has-validation">
-            <span class="input-group-text" id="inputGroupPrepend">@</span>
-            <input type="text" name="username" class="form-control" id="yourUsername" required>
-            <div class="invalid-feedback">Please choose a username.</div>
+            <span class="input-group-text" id="inputGroupPrepend">#</span>
+            <input type="text" name="student_no" class="form-control" id="yourStudentNo" required maxlength="8" autocomplete="off" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <div class="invalid-feedback">Please enter your student number (maximum 8 characters).</div>
         </div>
     </div>
 
@@ -132,7 +164,7 @@ if (isset($error)) {
         <div class="input-group">
         <input type="password" name="password" class="form-control" id="yourPassword" required
                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}"
-               title="Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.">
+               title="Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character." autocomplete="off">
                <button type="button" class="input-group-text" onclick="togglePasswordVisibility()">
                <i class="bi bi-eye-fill"></i>
             </button>
@@ -159,11 +191,7 @@ function togglePasswordVisibility() {
 </script>
 
     <div class="col-12">
-        <label for="userType" class="form-label">User Type</label>
-        <select name="user_type" class="form-control" required>
-            <option value="user">Staff</option>
-            <option value="admin">Admin</option>
-        </select>
+        <input type="hidden" name="user_type" value="alumni">
     </div>
 
     <div class="col-12">

@@ -1,15 +1,19 @@
 <?php
 session_start();
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
+    header('Location: index.php');
+    exit();
+}
 include 'db_conn.php';
 $id = $_GET['id']; 
 
 // Check if the user is logged in
-if (!isset($_SESSION['admin_name'])) {
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
     header('Location: index.php');
     exit();
 }
 
-$admin_name = $_SESSION['admin_name'];
+$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'];
 
 if (isset($_POST['submit'])) {
   // Sanitize user inputs
@@ -219,27 +223,7 @@ if ($result) {
 
 <hr class="sidebar-divider">
 
-       <!-- Events Management Nav -->
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#events-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Events</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="events-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="add_events.php">
-        <i class="bi bi-circle"></i><span>Add Events</span>
-      </a>
-    </li>
-    <li>
-      <a href="upcoming_events.php">
-        <i class="bi bi-circle"></i><span>Manage Events</span>
-      </a>
-    </li>
-    <li>
-    </li>
-  </ul>
-</li><!-- End Events Management Nav -->
-      
+       <!-- Removed Alumni Events Section -->
 <hr class="sidebar-divider">
 
 <li class="nav-item">

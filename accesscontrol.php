@@ -1,24 +1,26 @@
 <?php
 session_start();
-include "db_conn.php";
-
 if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
-  header('Location: index.php');
-  exit();
+    header('Location: index.php');
+    exit();
 }
 
-$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'];
+// Include the database connection file
+include 'db_conn.php';
 
-if (isset($result) && $result) {
-  if (mysqli_num_rows($result) > 0) {
-      $row = mysqli_fetch_array($result);
-      
-  } else {
-      echo "No admin found with the username: " . htmlspecialchars($admin_name);
-  }
+$admin_name = $_SESSION['admin_name'] ?? $_SESSION['super_admin_name'];
+
+// Fetch user information
+$sql = "SELECT id, name, email, student_no, username, user_type FROM `bcp_sms3_user`";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    $users = $result->fetch_all(MYSQLI_ASSOC);
 } else {
-  echo "MySQL Error: " . mysqli_error($conn);
+    $users = [];
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +109,7 @@ if (isset($result) && $result) {
 
 </header><!-- End Header -->
 
-    <!-- ======= Sidebar ======= -->
+   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -236,17 +238,16 @@ if (isset($result) && $result) {
 
 </aside><!-- End Sidebar-->
 
-
     <!-- End Sidebar-->
 
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>News & Announcements</h1>
+        <h1>Data Tables</h1>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="index.html">Home</a></li>
             <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">News</li>
+            <li class="breadcrumb-item active">Data</li>
           </ol>
         </nav>
       </div>
@@ -257,12 +258,8 @@ if (isset($result) && $result) {
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">News Archives</h5>
-                <p>
-                 
-                <a href="admin_news.php" class="btn btn-dark mb-3">Add New</a>
-                
-                </p>
+                <h5 class="card-title">Datatables</h5>
+                <p></p>
 
                 <!-- Table with stripped rows -->
                 <div class="table container-table">
@@ -275,36 +272,47 @@ if (isset($result) && $result) {
                     </div>';
                   }
                   ?>
-                <table class="table datatable  table-hover text-center">
+                
+                <table class="table datatable table-hover text-center">
   <thead class="table">
     <tr>
       <th scope="col">ID</th>
-      <th scope="col">Headline</th>
-      <th scope="col">Publisher</th>
-      <th scope="col">Date</th>
+      <th scope="col">Name</th>
+      <th scope="col">Email</th>
+      <th scope="col">Student No</th>
+      <th scope="col">Username</th>
+      <th scope="col">User Type</th>
       <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
     <?php
-    include "db_conn.php";
-    $sql = "SELECT * FROM `bcp-sms3_news`";
-    $result = mysqli_query($conn, $sql);
-    while ($row = mysqli_fetch_assoc($result)){ 
-        $date = $row['date'];
-      $formatted_date = date("m/d/Y", strtotime($date));
+    foreach ($users as $user) {
       
+      $class = '';
+      switch ($user['user_type']) {
+        case 'alumni':
+          $class = 'text-primary';
+          break;
+        case 'admin':
+          $class = 'text-danger';
+          break;
+        case 'super_admin':
+          $class = 'text-warning';
+          break;
+      }
     ?>
-      
       <tr>
-      <td><?php echo $row['id'] ?></td>
-      <td><?php echo $row['headline'] ?></td>
-      <td><?php echo $row['publisher'] ?></td>
-      <td><?php echo $formatted_date; ?></td> 
+      <td><?php echo $user['id'] ?></td>
+      <td><?php echo $user['name'] ?></td>
+      <td><?php echo $user['email'] ?></td>
+      <td><?php echo $user['student_no'] ?></td>
+      <td><?php echo $user['username'] ?></td>
+      <td class="<?php echo $class; ?>"><?php echo $user['user_type'] ?></td>
       <td>
-      <a href="viewdata.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
-        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
+        <a href="view_user.php?id=<?php echo $user['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
+        <a href="edit_user.php?id=<?php echo $user['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
+        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $user['id']; ?>">
   <i class="bx bxs-trash"></i>
 </a>
       </td>
@@ -339,7 +347,7 @@ if (isset($result) && $result) {
     
     // Update the modal's delete button with the correct delete link
     var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'delete.php?id=' + recordId);
+    confirmDelete.setAttribute('href', 'delete_user.php?id=' + recordId);
   });
 </script>
     <?php

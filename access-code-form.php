@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Access Code</title>
 </head>
@@ -48,18 +48,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </style>
 <body>
    
-<div class="code-container">
-            <div class="card-body">
-              <h5 class="card-title">Enter the Code</h5>
-              <div class="row mb-3">
-                 
-    <form method="POST" action="">
-    <label for="access_code" class="col-sm-2 col-form-label">Code:</label>
-        <input type="text" id="access_code" name="access_code" autocomplete="off" required>
-        <button type="submit">Submit</button>
-    </form>
-    <?php if (isset($error)): ?>
-        <p style="color: red;"><?php echo $error; ?></p>
-    <?php endif; ?>
-</body>
 </html>

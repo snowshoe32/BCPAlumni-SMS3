@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
+    header('Location: index.php');
+    exit();
+}
 include 'db_conn.php';
 $id = $_GET['id']; 
 
@@ -258,18 +262,13 @@ if ($result) {
   </a>
   <ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="event-data.php">
+      <a href="job-post-manage.php">
         <i class="bi bi-circle"></i><span>Manage Job Posting</span>
       </a>
     </li>
     <li>
-      <a href="add-event.php">
+      <a href="job-post-add.php">
         <i class="bi bi-circle"></i><span>Add Job Posting</span>
-      </a>
-    </li>
-    <li>
-      <a href="add-event.php">
-        <i class="bi bi-circle"></i><span>Manage Job Applications</span>
       </a>
     </li>
   </ul>
@@ -283,12 +282,12 @@ if ($result) {
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="event-data.php">
-        <i class="bi bi-circle"></i><span>Manage Alumni Applications</span>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>Manage Alumni ID Applications</span>
       </a>
     </li>
     <li>
-      <a href="add-event.php">
+      <a href="admin_managenews.php">
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
