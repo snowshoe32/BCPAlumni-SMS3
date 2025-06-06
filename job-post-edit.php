@@ -17,14 +17,13 @@ if (isset($_POST['submit'])) {
     $qualification = mysqli_real_escape_string($conn, $_POST['qualification']); 
     $image = mysqli_real_escape_string($conn, $_POST['image']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $salary = mysqli_real_escape_string($conn, $_POST['salary']);
     $date = mysqli_real_escape_string($conn, $_POST['date']);
     $source = mysqli_real_escape_string($conn, $_POST['source']);
     $employer = mysqli_real_escape_string($conn, $_POST['employer']);
     
     // Corrected SQL query
     $sql = "UPDATE `bcp-sms3_job` SET `jobtitle`='$jobtitle',`location`='$location',`email`='$email',`image`='$image',
-    `description`='$description',`qualification`='$qualification',`salary`='$salary', `date`='$date', `source`='$source', `employer`='$employer' WHERE id=$id";
+    `description`='$description',`qualification`='$qualification', `date`='$date', `source`='$source', `employer`='$employer' WHERE id=$id";
     $result = mysqli_query($conn, $sql);
 
     if ($result) {  
@@ -268,8 +267,9 @@ if ($result) {
       <h1>Add Alumni Events</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Add Alumni Events</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Career Opportunities</li>
+          <li class="breadcrumb-item active">Edit Job Posting</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -300,8 +300,12 @@ if ($result) {
         $jobtitle = $row['jobtitle'];
         $location = $row['location'];
         $email = $row['email'];
-        $salary = $row['salary'];
-    
+        $description = $row['description']; // Added
+        $qualification = $row['qualification']; // Added
+        $image = $row['image']; // Added
+        $date = $row['date']; // Added
+        $source = $row['source']; // Added
+        $employer = $row['employer']; // Added
     } else {
         echo "No record found for ID: $id";
         exit;
@@ -315,40 +319,37 @@ if ($result) {
               
 
               <form class="row g-3" method="post">
+    <div class="col-md-10">
+        <label class="form-label">Job Title </label>
+        <input type="text" class="form-control" name="jobtitle" placeholder="" value="<?php echo htmlspecialchars($jobtitle); ?>" required>
+    </div>
+    <div class="row g-3">
+        <label for="inputPassword" class=" col-form-label">Job Description</label>
         <div class="col-md-10">
-<label class="form-label">Job Title </label>
-<input type="text" class="form-control" name="jobtitle" placeholder="" value="<?php echo htmlspecialchars($jobtitle); ?>" required>
-</div>
-<div class="row g-3">
-                  <label for="inputPassword" class=" col-form-label">Job Description</label>
-                  <div class="col-md-10">
-                    <textarea class="form-control" style="height: 150px" name="description" value="<?php echo htmlspecialchars($description); ?>"></textarea>
-                  </div>
-                </div>
-                <div class="row g-3">
-                  <label for="inputPassword" class=" col-form-label">Job Qualifications</label>
-                  <div class="col-md-10">
-                    <textarea class="form-control" style="height: 150px" name="qualification" value="<?php echo htmlspecialchars($qualification); ?>"></textarea>
-                  </div>
-                </div>
-
+            <textarea class="form-control" style="height: 150px" name="description"><?php echo htmlspecialchars($description); ?></textarea>
+        </div>
+    </div>
+    <div class="row g-3">
+        <label for="inputPassword" class=" col-form-label">Job Qualifications</label>
         <div class="col-md-10">
-<label class="form-label">Location </label>
-<input type="text" class="form-control" name="location" placeholder="" value="<?php echo htmlspecialchars($location); ?>" required>
-</div>
-
+            <textarea class="form-control" style="height: 150px" name="qualification"><?php echo htmlspecialchars($qualification); ?></textarea>
+        </div>
+    </div>
+    <div class="col-md-10">
+        <label class="form-label">Location </label>
+        <input type="text" class="form-control" name="location" placeholder="" value="<?php echo htmlspecialchars($location); ?>" required>
+    </div>
+    <div class="col-md-10">
+        <label class="form-label">Send your resume to: </label>
+        <input type="email" class="form-control" name="email" placeholder="" value="<?php echo htmlspecialchars($email); ?>" required>
+    </div>
+    <div class="row g-3">
+        <label for="inputNumber" class="col-form-label">Job Image</label>
         <div class="col-md-10">
-<label class="form-label">Send your resume to: </label>
-<input type="email" class="form-control" name="email" placeholder="" value="<?php echo htmlspecialchars($email); ?>"required>
-</div>
-              <div class="row g-3">
-                  <label for="inputNumber" class="col-form-label">Job Image</label>
-                  <div class="col-md-10">
-                    <input class="form-control" type="file" id="formFile" name="image" value=" <?php echo htmlspecialchars($image); ?>">
-                  </div>
-                </div>
-
-        <div class="col-md-10">
+            <input class="form-control" type="file" id="formFile" name="image" value="<?php echo htmlspecialchars($image); ?>">
+        </div>
+    </div>
+    <div class="col-md-10">
         <label class="form-label">Date </label>
         <input type="date" class="form-control" name="date" value="<?php echo htmlspecialchars($date); ?>" required>
     </div>
@@ -360,26 +361,11 @@ if ($result) {
         <label class="form-label">Employer </label>
         <input type="text" class="form-control" name="employer" value="<?php echo htmlspecialchars($employer); ?>" required>
     </div>
-         
-          <div class="col-md-4">
-          <label for="inputContact" class="form-label">Salary</label>
-           <input type="text" class="form-control" name="salary" value="<?php echo htmlspecialchars($salary); ?>"
-         oninput="this.value=this.value.replace(/[^0-9\-\,]/g,'')" required 
-         title="Salary.">
-          <div class="invalid-feedback">
-       </div>
-        </div>
-  
- 
-       <form action="upcoming_events.php" method="POST">
-          
-          <div class="text-center">
-            <button type="submit" class="btn btn-primary" name="submit">Submit</button>
-            <button type="reset" class="btn btn-secondary">Reset</button>
-            
-          </div>
-
-              </form>
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary" name="submit">Submit</button>
+        <button type="button" class="btn btn-secondary" onclick="window.history.back();">Back</button>
+    </div>
+</form>
               <!-- End General Form Elements -->
 
   

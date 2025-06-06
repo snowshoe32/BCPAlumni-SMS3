@@ -13,17 +13,18 @@ if (isset($_POST['submit'])) {
     // Sanitize user inputs
     $student_no = mysqli_real_escape_string($conn, $_POST['student_no']);
     $lname = mysqli_real_escape_string($conn, $_POST['lname']); 
-    $mname = mysqli_real_escape_string($conn, $_POST['mname']); 
     $fname = mysqli_real_escape_string($conn, $_POST['fname']); 
-    $gender = mysqli_real_escape_string($conn, $_POST['gender']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $mname = mysqli_real_escape_string($conn, $_POST['mname']); 
+    $address = mysqli_real_escape_string($conn, $_POST['address']);
     $contact = mysqli_real_escape_string($conn, $_POST['contact']);
+    $course = mysqli_real_escape_string($conn, $_POST['course']);
     $birthdate = mysqli_real_escape_string($conn, $_POST['birthdate']);
-  
+    $yearGraduated = mysqli_real_escape_string($conn, $_POST['yearGraduated']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
     
     // SQL statement
-    $sql = "INSERT INTO `bcp-sms3_alumnidata` (`student_no`, `lname`, `mname`, `fname`, `gender`, `email`, `contact`, `birthdate`)
-            VALUES ('$student_no', '$lname', '$mname', '$fname', '$gender', '$email', '$contact', '$birthdate')";
+    $sql = "INSERT INTO `bcp_sms3_alumnidata1` (`student_no`, `lname`, `fname`, `mname`, `Address`, `contact`, `course`, `birthday`, `yearGraduated`, `email`)
+            VALUES ('$student_no', '$lname', '$fname', '$mname', '$address', '$contact', '$course', '$birthdate', '$yearGraduated', '$email')";
 
     // Execute the query
     $result = mysqli_query($conn, $sql);
@@ -206,29 +207,32 @@ if (isset($result) && $result) {
 <hr class="sidebar-divider">
 
 <li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
-</li>
-
+<!--Alumni Online Services-->
 
   <hr class="sidebar-divider">
 
@@ -263,9 +267,9 @@ if (isset($result) && $result) {
       <h1>Add Data</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">Pages</li>
-          <li class="breadcrumb-item active">Add data</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Alumni Data</li>
+          <li class="breadcrumb-item active">Add Alumni Data</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -277,75 +281,85 @@ if (isset($result) && $result) {
         <!-- Multi Columns Form -->
         
         <form class="row g-3" method="post">
-        <div class="col-md-10">
-<label class="form-label">Last Name </label>
-<input type="text" class="form-control" name="lname" placeholder="" required>
-</div>
-<form class="row g-3" method="post">
-        <div class="col-md-10">
-<label class="form-label">First Name </label>
-<input type="text" class="form-control" name="fname" placeholder="" required>
-</div>
-
-<form class="row g-3" method="post">
-        <div class="col-md-10">
-<label class="form-label">Middle Name </label>
-<input type="text" class="form-control" name="mname" placeholder="">
-</div>
-
-
-          <div class="col-md-4">
-            <label for="inputStudent" class="form-label">Student Number</label>
-            <input type="text" class="form-control" pattern="\d{8}" name="student_no" maxlength="8" 
-         oninput="this.value=this.value.replace(/[^0-9]/g,'')" required 
-         title="Student number must be exactly 8 digits.">
-          <div class="invalid-feedback">
-    Please enter exactly 8 numeric digits for the student number.
-       </div>
-          </div>
-          <div class="col-md-6">
-            <label for="inputEmail" class="form-label">Email</label>
-            <input type="email" class="form-control" name="email" placeholder="bcp123@gmail.com">
-          </div>
-          <div class="col-md-4">
-          <label for="inputContact" class="form-label">Contact Number</label>
-           <input type="text" class="form-control" pattern="\d{11}" name="contact" maxlength="11" 
-         oninput="this.value=this.value.replace(/[^0-9]/g,'')" required 
-         title="Contact number must be exactly 11 digits.">
-          <div class="invalid-feedback">
-    Please enter exactly 11 numeric digits for the contact number.
-       </div>
-        </div>
-  
-          <div class="col-md-3">
-            <label for="inputState" class="form-label">Gender</label>
-            <select id="gender" class="form-select" name="gender" required>
-              <option value="" selected disabled hidden>Choose...</option>
-              <option value="M">Male</option>
-              <option value="F">Female</option>
-            </select>
-          </div>
-      
-   
-          <form method="POST" action="student-data.php">
-    <div class="col-md-3">
-        <label for="inputDate" class="col-sm-4 col-form-label">Date of Birth</label>
-        <div class="col-sm-10">
-            <input type="date" class="form-control" name="birthdate" id="inputDate" required>
-        </div>
+    <div class="col-md-10">
+        <label class="form-label">Last Name</label>
+        <input type="text" class="form-control" name="lname" placeholder="" required>
     </div>
-    
-  
-
-            
-    <form action="submit.php" method="POST">
-          
-          <div class="text-center">
-            <button type="submit" class="btn btn-primary" name="submit">Submit</button>
-            <button type="reset" class="btn btn-secondary">Reset</button>
-            
-          </div>
-        </form><!-- End Multi Columns Form -->
+    <div class="col-md-10">
+        <label class="form-label">First Name</label>
+        <input type="text" class="form-control" name="fname" placeholder="" required>
+    </div>
+    <div class="col-md-10">
+        <label class="form-label">Middle Name</label>
+        <input type="text" class="form-control" name="mname" placeholder="">
+    </div>
+    <div class="col-md-10">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-control" name="address" placeholder="" required>
+    </div>
+    <div class="col-md-4">
+        <label for="inputStudent" class="form-label">Student Number</label>
+        <input type="text" class="form-control" pattern="\d{8}" name="student_no" maxlength="8" 
+               oninput="this.value=this.value.replace(/[^0-9]/g,'')" required 
+               title="Student number must be exactly 8 digits.">
+    </div>
+    <div class="col-md-6">
+        <label for="inputEmail" class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" placeholder="bcp123@gmail.com">
+    </div>
+    <div class="col-md-4">
+        <label for="inputContact" class="form-label">Contact Number</label>
+        <input type="text" class="form-control" pattern="\d{11}" name="contact" maxlength="11" 
+               oninput="this.value=this.value.replace(/[^0-9]/g,'')" required 
+               title="Contact number must be exactly 11 digits.">
+    </div>
+    <div class="col-md-3">
+        <label for="inputCourse" class="form-label">Course</label>
+        <select class="form-control" name="course" required>
+            <option value="" selected disabled hidden>Choose...</option>
+            <option value="BLIS">BLIS</option>
+            <option value="BSAIS">BSAIS</option>
+            <option value="BSCPE">BSCPE</option>
+            <option value="BSCRIM">BSCRIM</option>
+            <option value="BSENTREP">BSENTREP</option>
+            <option value="BSHM">BSHM</option>
+            <option value="BSIT">BSIT</option>
+            <option value="BSOA">BSOA</option>
+            <option value="BSP">BSP</option>
+            <option value="BSTM">BSTM</option>
+            <option value="BSBA-HRM">BSBA-HRM</option>
+            <option value="BSBA-MM">BSBA-MM</option>
+            <option value="CTE-BSED English">CTE-BSED English</option>
+            <option value="CTE-BSED Filipino">CTE-BSED Filipino</option>
+            <option value="CTE-BSED Math">CTE-BSED Math</option>
+            <option value="CTE-BSED Science">CTE-BSED Science</option>
+            <option value="CTE-BSED Social Studies">CTE-BSED Social Studies</option>
+            <option value="CTE-BSED Values">CTE-BSED Values</option>
+            <option value="CTE-BTLED">CTE-BTLED</option>
+            <option value="CTE-BPED">CTE-BPED</option>
+            <option value="CTE-BEED">CTE-BEED</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="inputDate" class="form-label">Date of Birth</label>
+        <input type="date" class="form-control" name="birthdate" required>
+    </div>
+    <div class="col-md-3">
+                <label for="inputYearGraduated" class="form-label">Year Graduated</label>
+                <select class="form-control" name="yearGraduated" required>
+                    <option value="" selected disabled hidden>Choose...</option>
+                    <?php
+                    for ($year = 2002; $year <= 2025; $year++) {
+                        echo '<option value="' . $year . '"' . ($row['yearGraduated'] == $year ? ' selected' : '') . '>' . $year . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary" name="submit">Submit</button>
+        <button type="reset" class="btn btn-secondary">Reset</button>
+    </div>
+</form>
 
       </div>
     </div>
@@ -365,7 +379,7 @@ if (isset($result) && $result) {
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="copyright">
-      &copy; Copyright <strong><span>XXXXXX</span></strong>. All Rights Reserved
+      &copy; Copyright <strong><span>Bestlink College of the Philippines</span></strong>. All Rights Reserved
     </div>
     <div class="credits">
       BCP

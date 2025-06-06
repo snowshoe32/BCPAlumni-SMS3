@@ -11,27 +11,40 @@ if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
 $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'];
 
 if (isset($_POST['submit'])) {
-    // Sanitize user inputs
-    $headline = mysqli_real_escape_string($conn, $_POST['headline']);
-    $publisher = mysqli_real_escape_string($conn, $_POST['publisher']); 
-    $date = mysqli_real_escape_string($conn, $_POST['date']);
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $photo = mysqli_real_escape_string($conn, $_POST['photo']);
-   
-  
-    $sql = "INSERT INTO `bcp-sms3_news`( `headline`, `publisher`, `date`, `description`, `photo`)
-     VALUES ('$headline','$publisher','$date','$description','$photo')";
+    // Check if the file input exists and is not empty
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] == UPLOAD_ERR_OK) {
+        // Sanitize user inputs
+        $headline = mysqli_real_escape_string($conn, $_POST['headline']);
+        $publisher = mysqli_real_escape_string($conn, $_POST['publisher']);
+        $date = mysqli_real_escape_string($conn, $_POST['date']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        $embed = mysqli_real_escape_string($conn, $_POST['embed']);
 
-    
-    $result = mysqli_query($conn, $sql);
+        // Handle file upload
+        $photo = $_FILES['photo']['name'];
+        $target_dir = "BCPAlumni-SMS3/Newsphoto/";
+        $target_file = $target_dir . basename($photo);
 
-    
-    if ($result) {  
-        header("Location: admin_managenews.php?msg=New record created successfully");
-        exit();
+        if (move_uploaded_file($_FILES['photo']['tmp_name'], $target_file)) {
+            $photo_path = mysqli_real_escape_string($conn, $target_file);
+        } else {
+            echo "Error uploading file.";
+            exit();
+        }
+
+        $sql = "INSERT INTO `bcp-sms3_news`( `headline`, `publisher`, `date`, `description`, `embed`, `photo`)
+         VALUES ('$headline','$publisher','$date','$description','$embed','$photo_path')";
+
+        $result = mysqli_query($conn, $sql);
+
+        if ($result) {  
+            header("Location: admin_managenews.php?msg=New record created successfully");
+            exit();
+        } else {
+            echo "MySQL Error: " . mysqli_error($conn);
+        }
     } else {
-       
-        echo "MySQL Error: " . mysqli_error($conn);
+        echo "No file uploaded or file upload error.";
     }
 }
 
@@ -89,11 +102,11 @@ if (isset($result) && $result) {
 <body>
 
   <!-- ======= Header ======= -->
-  <!-- ======= Header ======= -->
-  <header id="header" class="header fixed-top d-flex align-items-center">
+  <header id="header" class="header fixed-top d-flex align-items-center" style="z-index: 1040;">
 
     <div class="d-flex align-items-center justify-content-between">
       <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
     </div><!-- End Logo -->
 
     <nav class="header-nav ms-auto">
@@ -267,8 +280,9 @@ if (isset($result) && $result) {
       <h1>Alumni Services</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item ">Add News</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">News & Announcements</li>
+          <li class="breadcrumb-item active">News</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -283,7 +297,7 @@ if (isset($result) && $result) {
 
               <!-- General Form Elements -->
               
-              <form class="row mb-3" method="post">
+              <form class="row mb-3" method="post" enctype="multipart/form-data">
                 <div class="row mb-3">
                   <label for="inputText" class="col-sm-2 col-form-label">Headline</label>
                   <div class="col-sm-10">
@@ -306,9 +320,16 @@ if (isset($result) && $result) {
                 
  
                 <div class="row mb-3">
-                  <label for="inputPassword" class="col-sm-2 col-form-label">Event Description</label>
+                  <label for="inputPassword" class="col-sm-2 col-form-label">
+                  Description</label>
                   <div class="col-sm-10">
                     <textarea class="form-control" style="height: 150px" name="description"></textarea>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <label for="inputEmbed" class="col-sm-2 col-form-label">Link</label>
+                  <div class="col-sm-10">
+                    <textarea class="form-control" style="height: 100px" name="embed"></textarea>
                   </div>
                 </div>
                 <div class="row mb-3">

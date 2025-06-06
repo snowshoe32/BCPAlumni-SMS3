@@ -17,7 +17,7 @@ if (isset($_GET['token'])) {
             $confirm_password = mysqli_real_escape_string($conn, $_POST['confirm_password']);
 
             if ($new_password === $confirm_password) {
-                if (strlen($new_password) >= 8 && preg_match('/[A-Z]/', $new_password) && preg_match('/[0-9]/', $new_password)) {
+                if (strlen($new_password) >= 8 && preg_match('/[A-Z]/', $new_password) && preg_match('/[0-9]/', $new_password) && preg_match('/[!@#$%^&*(),.?":{}|<>]/', $new_password)) {
                     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
                     $update_password = "UPDATE `bcp_sms3_user` SET password='$hashed_password' WHERE email='$email'";
@@ -33,7 +33,7 @@ if (isset($_GET['token'])) {
                         echo "<div class='alert alert-danger'>Failed to reset password. Please try again.</div>";
                     }
                 } else {
-                    echo "<script>showModal('Password must be at least 8 characters long, contain at least one uppercase letter and one number!');</script>";
+                    echo "<script>showModal('Password must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character!');</script>";
                 }
             } else {
                 echo "<script>showModal('Passwords do not match!');</script>";
@@ -176,7 +176,7 @@ if (isset($_GET['token'])) {
     function validatePasswords() {
       var newPassword = document.getElementById("new_password").value;
       var confirmPassword = document.getElementById("confirm_password").value;
-      var passwordPattern = /^(?=.*[A-Z])(?=.*\d).+$/;
+      var passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).+$/;
 
       if (newPassword !== confirmPassword) {
         showModal('Passwords do not match!');
@@ -184,7 +184,7 @@ if (isset($_GET['token'])) {
       }
 
       if (newPassword.length < 8 || !passwordPattern.test(newPassword)) {
-        showModal('Password must be at least 8 characters long, contain at least one uppercase letter and one number!');
+        showModal('Password must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character!');
         return false;
       }
 

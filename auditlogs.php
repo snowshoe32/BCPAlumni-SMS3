@@ -187,29 +187,32 @@ $conn->close();
 <hr class="sidebar-divider">
 
 <li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
-</li>
-
+<!--Alumni Online Services-->
 
   <hr class="sidebar-divider">
 
@@ -242,12 +245,12 @@ $conn->close();
 
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>Data Tables</h1>
+        <h1>Audit Logs</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">Data</li>
+            <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Audit Logs</li>
+            <li class="breadcrumb-item active">View Logs</li>
           </ol>
         </nav>
       </div>
@@ -258,7 +261,7 @@ $conn->close();
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Datatables</h5>
+                <h5 class="card-title">Audit Logs</h5>
                 <p></p>
 
                 <!-- Table with stripped rows -->
@@ -324,11 +327,9 @@ $conn->close();
       <td><?php echo $log['resource_access'] ?></td>
       <td><?php echo $log['ip_address'] ?></td>
       <td>
-        <a href="view_log.php?id=<?php echo $log['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="edit_log.php?id=<?php echo $log['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
-        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $log['id']; ?>">
-  <i class="bx bxs-trash"></i>
-</a>
+        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $log['id']; ?>">
+          <i class="bx bxs-trash"></i>
+        </button>
       </td>
       </tr> 
     
@@ -337,31 +338,30 @@ $conn->close();
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Delete Data</h5>
+        <h5 class="modal-title" id="deleteModalLabel">Delete Confirmation</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         Are you sure you want to delete this record?
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-        <!-- The delete button where we will inject the dynamic ID -->
-        <a href="#" id="confirmDelete" class="btn btn-danger">Delete</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="deleteForm" method="POST" action="delete_log.php" style="display:inline;">
+          <input type="hidden" name="id" id="deleteRecordId">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
       </div>
     </div>
   </div>
 </div>
+
 <script>
   var deleteModal = document.getElementById('deleteModal');
   deleteModal.addEventListener('show.bs.modal', function (event) {
-    // Button that triggered the modal
     var button = event.relatedTarget;
-    // Extract the record id from data-id attribute
     var recordId = button.getAttribute('data-id');
-    
-    // Update the modal's delete button with the correct delete link
-    var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'delete_user.php?id=' + recordId);
+    var deleteRecordId = document.getElementById('deleteRecordId');
+    deleteRecordId.value = recordId;
   });
 </script>
     <?php

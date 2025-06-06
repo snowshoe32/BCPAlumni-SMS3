@@ -1,6 +1,10 @@
 <?php
 
 include "db_conn.php"; 
+require 'vendor/autoload.php'; // Include PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 session_start();
 
 if (isset($_GET['success'])) {
@@ -8,45 +12,31 @@ if (isset($_GET['success'])) {
 }
 
 if (isset($_POST['submit'])) {
-    
     $student_no = mysqli_real_escape_string($conn, $_POST['student_no']);
     $password = $_POST['password'];  // Input password (not hashed)
 
     // Check if user exists based on the student number
-    $check_user = "SELECT * FROM `bcp_sms3_user` WHERE student_no = '$student_no'";
+    $check_user = "SELECT * FROM `bcp-sms3_alumnidata` WHERE student_no = '$student_no'";
     $result = mysqli_query($conn, $check_user);
 
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_array($result);
-        // Check if the account is verified
-        if ($row['is_verified'] == 0) {
-            $error[] = 'Your account is not verified. Please check your email.';
-        } else {
-            // Verifying hashed password with input password
-            if (password_verify($password, $row['password'])) {
-                // Set session based on user type
-                if ($row['user_type'] == 'admin') {
-                    $_SESSION['admin_name'] = $row['name'];
-                    header('location:admin_dashboard.php');  
-                } else if ($row['user_type'] == 'alumni') {
-                    $_SESSION['alumni_name'] = $row['name'];
-                    header('location:alumni_dashboard.php');  
-                } else if ($row['user_type'] == 'super_admin') {
-                    $_SESSION['super_admin_name'] = $row['name'];
-                    header('location:admin_dashboard.php');  
-                }
+        if (password_verify($password, $row['password'])) {
+            if ($row['user_type'] == 'alumni') {
+                $_SESSION['alumni_name'] = $row['student_no']; // Store student number in session
+                header("Location: alumni_dashboard.php");
+                exit();
             } else {
-                // Incorrect password
-                $error[] = 'Incorrect password!';
+                $error[] = 'Access restricted to alumni only!';
             }
+        } else {
+            $error[] = 'Incorrect password!';
         }
     } else {
-        // Student number does not exist
         $error[] = 'No user found with this student number!';
     }
 }
 
-// Display error messages, if any
 if (isset($error)) {
     foreach ($error as $msg) {
         echo "<div class='alert alert-danger'>$msg</div>";
@@ -142,7 +132,7 @@ input[type="password"] {
     font-size: 12px;
 }
 
-.forgot-password a:hover, .register-link a:hover {
+forgot-password a:hover, .register-link a:hover {
     text-decoration: underline;
 }
 
@@ -173,10 +163,10 @@ button:hover {
            
         <form id="loginForm" action="index2.php" method="post" autocomplete="off">
             <label for="studentNumber">Student Number</label>
-            <input type="text" id="studentNumber" name="student_no" required aria-label="Student Number" pattern="\d{1,8}" title="Please enter a valid student number (up to 8 digits)" maxlength="8" inputmode="numeric">
+            <input type="text" id="studentNumber" name="student_no" required aria-label="Student Number" pattern="\d{1,8}" autocomplete="new-password" title="Please enter a valid student number (up to 8 digits)" maxlength="8" inputmode="numeric">
 
             <label for="password">Password</label>
-            <input type="password" id="yourPassword" name="password" required aria-label="Password">
+            <input type="password" id="yourPassword" name="password" required aria-label="Password" autocomplete="new-password">
 
             <div class="forgot-password">
                 <a href="forgot_pass.php" aria-label="Forgot password?">Forgot your password?</a>

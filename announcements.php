@@ -11,19 +11,27 @@ if (isset($_SESSION['alumni_name'])) {
     exit();
 }
 
-$sql = "SELECT * FROM bcp_sms3_user WHERE username = 'Guest'";
-$result = mysqli_query($conn, $sql);
+$sql = "SELECT * FROM `bcp-sms3_alumnidata` WHERE `student_no` = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $alumni_name);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
-        // Other logic for the admin dashboard
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $alumni_fname = htmlspecialchars($row['fname']); // Display first name safely
+        // Other logic for the alumni dashboard
     } else {
         echo "No admin found with the username: Guest";
     }
 } else {
-    echo "MySQL Error: " . mysqli_error($conn);
+    echo "MySQL Error: " . $conn->error;
 }
+
+// Fetch news data from the database
+$sql_news = "SELECT * FROM `bcp-sms3_news` ORDER BY date DESC";
+$result_news = mysqli_query($conn, $sql_news);
 ?>
 
 <!DOCTYPE html>
@@ -62,44 +70,50 @@ if ($result) {
 
 <body>
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="header fixed-top d-flex align-items-center">
+ <!-- ======= Header ======= -->
+ <header id="header" class="header fixed-top d-flex align-items-center">
 
-    <div class="d-flex align-items-center justify-content-between">
-      <i class="bi bi-list toggle-sidebar-btn"></i>
-    </div><!-- End Logo -->
+<div class="d-flex align-items-center justify-content-between">
+  <i class="bi bi-list toggle-sidebar-btn"></i>
+</div><!-- End Logo -->
 
-    <nav class="header-nav ms-auto">
-      <ul class="d-flex align-items-center">
+<nav class="header-nav ms-auto">
+  <ul class="d-flex align-items-center">
 
-        <li class="nav-item dropdown pe-3">
+    <li class="nav-item dropdown pe-3">
 
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo htmlspecialchars($alumni_name); ?></span>
-          </a><!-- End Profile Image Icon -->
+      <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+        <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $alumni_fname; ?></span>
+      </a><!-- End Profile Image Icon -->
 
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-            <li class="dropdown-header">
-              <h6><?php echo htmlspecialchars($alumni_name); ?></h6>
-              <span></span>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Sign Out</span>
-              </a>
-            </li>
-          </ul><!-- End Profile Dropdown Items -->
-        </li><!-- End Profile Nav -->
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+        <li class="dropdown-header">
+          <h6><?php echo htmlspecialchars($alumni_name); ?></h6>
+          <span></span>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="data-profile.php">
+            <i class="bi bi-file-earmark-person"></i>
+            <span>Data Profile</span>
+          </a>
+        </li>
+        
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="logout_form2.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </a>
+        </li>
+      </ul><!-- End Profile Dropdown Items -->
+    </li><!-- End Profile Nav -->
 
-      </ul>
-    </nav><!-- End Icons Navigation -->
+  </ul>
+</nav><!-- End Icons Navigation -->
 
-  </header><!-- End Header -->
-
+</header><!-- End Header -->
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
 
@@ -108,7 +122,7 @@ if ($result) {
       </div>
       <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
         <img src="assets/img/bestlinkalumnilogo1.png" alt="Bestlink Alumni Logo" style="width:130px;height: auto;">
-       
+
       </div>
 
     
@@ -124,7 +138,7 @@ if ($result) {
     <hr class="sidebar-divider">
 
       <li class="nav-item">
-        <a class="nav-link " href="public_dashboard.php" class="active">
+        <a class="nav-link " href="alumni_dashboard.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>
@@ -134,16 +148,17 @@ if ($result) {
 
       <li class="nav-heading"></li>
 
-    
       <li class="nav-item">
         <a class="nav-link " href="announcements.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Announcements</span>
         </a>
       </li><!-- Announcements Nav -->
-</li><!-- End System Nav -->
 
+  
+</li><!-- End System Nav -->
       <hr class="sidebar-divider">
+
 
 
       <li class="nav-item">
@@ -153,110 +168,113 @@ if ($result) {
         </a>
       </li><!-- Announcements Nav -->
 
+
 <hr class="sidebar-divider">
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    
     <li>
-      <a href="id_manage.php">
-        <i class="bi bi-circle"></i><span>View Alumni ID Applications</span>
-      </a>
-    </li>
-    <li>
-      <a href="admin_managenews.php">
+      <a href="alumni_tracer.php">
         <i class="bi bi-circle"></i><span>Alumni Tracer</span>
       </a>
     </li>
     <li>
-      <a href="admin_managenews.php">
+      <a href="id_application.php">
         <i class="bi bi-circle"></i><span>Apply for Alumni ID</span>
+      </a>
+    </li>
+    <li>
+      <a href="alumni_benefits2.php">
+        <i class="bi bi-circle"></i><span>Alumni Benefits</span>
       </a>
     </li>
   </ul>
 </li>
-<!--Student Alumni Services-->
+<!--Alumni Online Services-->
 
 <!-- Remove Profile and Contact links -->
 <!-- End Profile Page Nav -->
 <!-- End Contact Page Nav -->
+
+<hr class="sidebar-divider">
 
   </aside><!-- End Sidebar-->
 
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Dashboard</h1>
+      <h1>Announcements</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Dashboard</li>
+          <li class="breadcrumb-item active">Announcements</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
 
-    <section class="section dashboard">
-      
+   
+    </section>
 
+    <?php
+// Fetch news data from the database
+$sql_news = "SELECT * FROM `bcp-sms3_news` ORDER BY date DESC";
+$result_news = mysqli_query($conn, $sql_news);
+?>
 
+<section class="section">
+  <div class="row">
+    <?php
+    if ($result_news && mysqli_num_rows($result_news) > 0) {
+      while ($row_news = mysqli_fetch_assoc($result_news)) {
+        $formatted_date = date("m/d/Y", strtotime($row_news['date']));
+        if (isset($row_news['photo']) && !empty($row_news['photo']) && file_exists($row_news['photo'])) {
+            $image_path = htmlspecialchars($row_news['photo']);
+        } else {
+            $image_path = 'assets/img/placeholder.png'; // Default placeholder image
 
-        <!-- Right side columns -->
-     
-         
-         
-        
-
-          <!-- News & Updates Traffic -->
+        }
+        $headline = htmlspecialchars($row_news['headline']);
+        $publisher = htmlspecialchars($row_news['publisher']);
+        $news_id = $row_news['id']; // Assuming 'id' is the primary key for the news table
+    ?>
+        <div class="col-lg-4 col-md-6 mb-4">
           <div class="card">
-
-            <div class="card-body pb-0"></div>
-              <h5 class="card-title">Recent News &amp; Updates <span>| Today</h5>
-
-              <div class="news">
-                <div class="post-item clearfix">
-                  <img src="assets/img/news-1.jpg" alt="">
-                  <h4><a href="#">Alumni from Bestlink topnotcher places 1st</a></h4>
-                  <p>Sit recusandae non aspernatur laboriosam. Quia enim eligendi sed ut harum...</p>
-                </div>
-
-                <div class="post-item clearfix">
-                  <img src="assets/img/news-2.jpg" alt="">  
-                  <h4><a href="#">Quidem autem et impedit</a></h4>
-                  <p>Illo nemo neque maiores vitae officiis cum eum turos elan dries werona nande...</p>
-                </div>
-
-                <div class="post-item clearfix"></div>
-                  <h4><a href="#">Id quia et et ut maxime similique occaecati ut</a></h4>
-                  <p>Fugiat voluptas vero eaque accusantium eos. Consequuntur sed ipsam et totam...</p>
-                </div>ugiat voluptas vero eaque accusantium eos. Consequuntur sed ipsam et totam...</p>
-                </div>
-                <div class="post-item clearfix"></div>
-                  <img src="assets/img/news-4.jpg" alt="">
-                  <h4><a href="#">Laborum corporis quo dara net para</a></h4>
-                  <p>Qui enim quia optio. Eligendi aut asperiores enim repellendusvel rerum cuder...</p>
-                </div>ui enim quia optio. Eligendi aut asperiores enim repellendusvel rerum cuder...</p>
-                </div>
-                <div class="post-item clearfix"></div>
-                  <img src="assets/img/news-5.jpg" alt="">
-                  <h4><a href="#">Et dolores corrupti quae illo quod dolor</a></h4>
-                  <p>Odit ut eveniet modi reiciendis. Atque cupiditate libero beatae dignissimos eius...</p>
-                </div>dit ut eveniet modi reiciendis. Atque cupiditate libero beatae dignissimos eius...</p>
-                </div>
-              </div><!-- End sidebar recent posts-->
-              </div><!-- End sidebar recent posts-->
+            <a href="alumniviewnews.php?id=<?php echo $news_id; ?>">
+              <img src="<?php echo $image_path; ?>" class="card-img-top" alt="News Image" style="height: 200px; object-fit: cover;">
+            </a>
+            <div class="card-body ">
+              <h5 class="card-title "><?php echo $headline; ?></h5>
+              <p class="card-text">Published by: <?php echo $publisher; ?></p>
+              <p class="card-text ">
+                <small class="text-muted">Date: <?php echo $formatted_date; ?></small>
+              </p>
+              <a href="embed.php?id=<?php echo $news_id; ?>" class="bi bi-facebook text-muted"></a>
             </div>
-          </div><!-- End News & Updates -->
-          </div><!-- End News & Updates -->
-        <!-- End Right side columns -->
-        <!-- End Right side columns -->
+          </div>
+        </div>
+    <?php
+      }
+    } else {
+      echo "<p>No news available</p>";
+    }
+    ?>
+  </div>
+</section>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
-    </section>
   </main><!-- End #main -->
-  </main><!-- End #main -->
+
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="copyright">
@@ -265,23 +283,17 @@ if ($result) {
     <div class="credits">
     </div>
   </footer><!-- End Footer -->
-  </footer><!-- End Footer -->
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
   <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/chart.js/chart.umd.js"></script>script>
-  <script src="assets/vendor/echarts/echarts.min.js"></script>.js"></script>
-  <script src="assets/vendor/quill/quill.js"></script>script>
+  <script src="assets/vendor/chart.js/chart.umd.js"></script>
+  <script src="assets/vendor/echarts/echarts.min.js"></script>
+  <script src="assets/vendor/quill/quill.js"></script>
   <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
   <script src="assets/vendor/tinymce/tinymce.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>s"></script>
-  <script src="assets/vendor/tinymce/tinymce.min.js"></script>
-  <!-- Template Main JS File --></script>
-  <script src="assets/js/main.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
   <!-- Template Main JS File -->
-</body></script>
-
-</html>
+  <script src="assets/js/main.js"></script>
+</body>
 
 </html>

@@ -184,29 +184,27 @@ if (isset($result) && $result) {
 <hr class="sidebar-divider">
 
 <li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+  </ul>
 </li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
-</li>
-
 
   <hr class="sidebar-divider">
 
@@ -244,9 +242,9 @@ if (isset($result) && $result) {
         <h1>News & Announcements</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">News</li>
+            <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">News & Announcements</li>
+            <li class="breadcrumb-item active">Manage News</li>
           </ol>
         </nav>
       </div>
@@ -259,9 +257,8 @@ if (isset($result) && $result) {
               <div class="card-body">
                 <h5 class="card-title">News Archives</h5>
                 <p>
-                 
-                <a href="admin_news.php" class="btn btn-dark mb-3">Add New</a>
-                
+                  <a href="admin_news.php" class="btn btn-dark mb-3 me-2">Add New</a>
+                  <a href="viewevent.php" class="btn btn-success mb-3">View Upcoming Events</a>
                 </p>
 
                 <!-- Table with stripped rows -->
@@ -293,21 +290,21 @@ if (isset($result) && $result) {
     while ($row = mysqli_fetch_assoc($result)){ 
         $date = $row['date'];
       $formatted_date = date("m/d/Y", strtotime($date));
-      
+      $image_path = isset($row['image_path']) && !empty($row['image_path']) ? 'BCPAlumni-SMS3/Newsphoto/' . htmlspecialchars($row['image_path']) : 'assets/img/placeholder.png';
     ?>
       
-      <tr>
+      <tr data-id="<?php echo $row['id']; ?>">
       <td><?php echo $row['id'] ?></td>
       <td><?php echo $row['headline'] ?></td>
       <td><?php echo $row['publisher'] ?></td>
       <td><?php echo $formatted_date; ?></td> 
       <td>
-      <a href="viewdata.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
-        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
-  <i class="bx bxs-trash"></i>
-</a>
-      </td>
+  <a href="viewnews.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
+  <a href="editnews.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
+  <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
+    <i class="bx bxs-trash"></i>
+  </a>
+</td>
       </tr> 
     
     <!-- Delete Confirmation Modal -->
@@ -336,10 +333,24 @@ if (isset($result) && $result) {
     var button = event.relatedTarget;
     // Extract the record id from data-id attribute
     var recordId = button.getAttribute('data-id');
-    
+
     // Update the modal's delete button with the correct delete link
     var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'delete.php?id=' + recordId);
+    confirmDelete.setAttribute('href', 'deletenews.php?id=' + recordId);
+
+    // Highlight the row of the table that corresponds to the record ID
+    var tableRow = document.querySelector(`tr[data-id='${recordId}']`);
+    if (tableRow) {
+      tableRow.style.backgroundColor = '#f8d7da'; // Highlight with a light red color
+    }
+  });
+
+  deleteModal.addEventListener('hidden.bs.modal', function () {
+    // Remove the highlight from all rows when the modal is closed
+    var highlightedRows = document.querySelectorAll('tr[data-id]');
+    highlightedRows.forEach(function (row) {
+      row.style.backgroundColor = '';
+    });
   });
 </script>
     <?php
@@ -361,7 +372,7 @@ if (isset($result) && $result) {
     <!-- ======= Footer ======= -->
     <footer id="footer" class="footer">
       <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong
+        &copy; Copyright <strong><span>Bestlink College of the Philippines</span></strong
         >. All Rights Reserved
       </div>
       <div class="credits">

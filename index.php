@@ -1,48 +1,73 @@
 <?php
-
-include "db_conn.php"; 
 session_start();
+include "db_conn.php";
+require 'vendor/autoload.php'; // Include PHPMailer
 
-if (isset($_GET['success'])) {
-    echo "<div class='alert alert-success'>" . htmlspecialchars($_GET['success']) . "</div>";
-}
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if (isset($_POST['submit'])) {
-    
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = $_POST['password'];  // Input password (not hashed)
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $password = $_POST['password'];
 
-    // Check if user exists based on the username
-    $check_user = "SELECT * FROM `bcp_sms3_user` WHERE username = '$username'";
+    // Fetch user details based on the email
+    $check_user = "SELECT * FROM `bcp_sms3_user` WHERE email = '$email'";
     $result = mysqli_query($conn, $check_user);
 
-    if (mysqli_num_rows($result) > 0) {
+    if ($result && mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_array($result);
-        // Check if the account is verified
+        $name = $row['name'];
+
         if ($row['is_verified'] == 0) {
             $error[] = 'Your account is not verified. Please check your email.';
         } else {
-            // Verifying hashed password with input password
             if (password_verify($password, $row['password'])) {
-                // Set session based on user type
-                if ($row['user_type'] == 'admin') {
-                    $_SESSION['admin_name'] = $row['name'];
-                    header('location:admin_dashboard.php');  
-                } else if ($row['user_type'] == 'alumni') {
-                    $_SESSION['alumni_name'] = $row['name'];
-                    header('location:alumni_dashboard.php');  
-                } else if ($row['user_type'] == 'super_admin') {
-                    $_SESSION['super_admin_name'] = $row['name'];
-                    header('location:admin_dashboard.php');  
+                // Generate 6-digit code for token2
+                $code = rand(100000, 999999);
+                $token2 = $code;
+                $token = bin2hex(random_bytes(16));
+                $_SESSION['2fa_user'] = $row;
+                $_SESSION['2fa_code'] = $code; // Store the code in the session
+
+                // Store token, token2, and code in the database
+                $user_id = $row['id'];
+                $update_token = "UPDATE `bcp_sms3_user` SET token='$token', token2='$token2' WHERE id='$user_id'";
+                mysqli_query($conn, $update_token);
+
+                try {
+                    //Server settings
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    $mail->Host       = 'smtp.gmail.com'; // Set the SMTP server to send through
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = 'snowshoe0103@gmail.com'; // SMTP username
+                    $mail->Password   = 'bvoa zaxb ugki vtwm'; // SMTP password (use App Password if 2-Step Verification is enabled)
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port       = 587;
+
+                    //Recipients
+                    $mail->setFrom('snowshoe0103@gmail.com', 'Mailer');
+                    $mail->addAddress($email, $name);
+
+                    // Content
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Your 2FA Code';
+                    $mail->Body    = "Hi $name,<br><br>Your 2FA code is: <strong>$code</strong>.<br><br>Please enter this code on the verification page to complete your login.<br><br>Thank you,<br>Alumni Management System";
+
+                    $mail->send();
+                    $_SESSION['success'] = 'Two-Factor Authenticator Code has been sent to Email.';
+                    echo "Two-Factor Authenticator Code has been sent to Email.";
+                    header("Location: verify_2fa.php");
+                    exit();
+                } catch (Exception $e) {
+                    $error[] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
                 }
             } else {
-                // Incorrect password
                 $error[] = 'Incorrect password!';
             }
         }
     } else {
-        // Username does not exist
-        $error[] = 'No user found with this username!';
+        $error[] = 'No user found with this email!';
     }
 }
 
@@ -53,8 +78,6 @@ if (isset($error)) {
     }
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -67,7 +90,6 @@ if (isset($error)) {
 <style>
     body {
     background-color: #f4f4f4;
-    /*background-image: url('assets/img/bcp\ bg.jpg');*/
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
@@ -116,7 +138,7 @@ label {
     margin: 10px 0 5px;
 }
 
-#accountId, #password {
+#yourEmail, #yourPassword {
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border: 1px solid black;
@@ -172,21 +194,18 @@ button:hover {
     <div class="login-container">
         <h2>Log Into Your Account</h2>
       
-           
         <form id="loginForm" action="index.php" method="post" autocomplete="off">
-            <label for="accountId">Username</label>
-            <input type="text" id="yourUsername" name="username" required aria-label="Username">
+            <label for="yourEmail">Email</label>
+            <input type="text" id="yourEmail" name="email" required aria-label="Email" autocomplete="new-password">
 
-            <label for="password">Password</label>
-            <input type="password" id="yourPassword" name="password" required aria-label="Password">
+            <label for="yourPassword">Password</label>
+            <input type="password" id="yourPassword" name="password" required aria-label="Password" autocomplete="new-password">
 
             <div class="forgot-password">
                 <a href="forgot_pass.php" aria-label="Forgot password?">Forgot your password?</a>
             </div>
 
-            <div class="register-link">
-                <a href="pages-register.php" aria-label="Register">Don't have an account? Register here</a>
-            </div>
+           
 
             <button class="btn btn-primary w-100" type="submit" name="submit">LOGIN</button>
         </form>

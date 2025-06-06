@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <?php echo $message; ?>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="window.location.href='admin_tracer.php'">OK</button>
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='alumni_dashboard.php'">OK</button>
                 </div>
             </div>
         </div>

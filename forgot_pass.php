@@ -1,71 +1,103 @@
 <?php
-session_start();
-include "db_conn.php"; 
+// No need to check for admin login here - this page is for non-logged-in users
+session_start(); // Start session to potentially store feedback messages
+include "db_conn.php";
 require 'vendor/autoload.php'; // Include PHPMailer
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
-    header('Location: index.php');
-    exit();
-}
+$message = ''; // Variable to hold feedback messages
 
-if (isset($_POST['submit'])) {
+// Process form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
 
-    // Check if user exists based on the email
-    $check_user = "SELECT * FROM `bcp_sms3_user` WHERE email = '$email'";
-    $result = mysqli_query($conn, $check_user);
+    // 1. Check if the email exists in the main user table
+    $check_user_sql = "SELECT id, name FROM `bcp_sms3_user` WHERE email = ?";
+    $stmt_check = $conn->prepare($check_user_sql);
+    if ($stmt_check) {
+        $stmt_check->bind_param("s", $email);
+        $stmt_check->execute();
+        $result = $stmt_check->get_result();
 
-    if (mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-        $name = $user['name'];
-        $token = bin2hex(random_bytes(50)); // Generate a random token
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            $user_id = $user['id']; // Get user ID if needed, though reset_password.php uses email
+            $name = $user['name'];
+            $token = bin2hex(random_bytes(50)); // Generate a secure random token
 
-        // Save the token in the database (you need to create a table for tokens if not exists)
-        $save_token = "INSERT INTO password_reset_tokens (email, token) VALUES ('$email', '$token')";
-        if (mysqli_query($conn, $save_token)) {
-            $mail = new PHPMailer(true);
-            try {
-                //Server settings
-                $mail->isSMTP();
-                $mail->Host       = 'smtp.gmail.com'; // Set the SMTP server to send through
-                $mail->SMTPAuth   = true;
-                $mail->Username   = 'snowshoe0103@gmail.com'; // SMTP username
-                $mail->Password   = 'bvoa zaxb ugki vtwm'; // SMTP password (use App Password if 2-Step Verification is enabled)
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = 587;
-
-                //Recipients
-                $mail->setFrom('snowshoe0103@gmail.com', 'Mailer');
-                $mail->addAddress($email, $name);
-
-                // Content
-                $mail->isHTML(true);
-                $mail->Subject = 'Password Reset Request';
-                $mail->Body    = "Hi $name, Click the link below to reset your password: 
-                                  <a href='http://localhost/public_html/reset_password.php?token=$token'>Reset Password</a>";
-
-                $mail->send();
-                $_SESSION['success'] = 'Password reset link has been sent to your email.';
-                echo "<script>$(document).ready(function() { $('#successModal').modal('show'); });</script>";
-            } catch (Exception $e) {
-                $error[] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            // 2. Delete any existing tokens for this email in the reset table
+            $delete_token_sql = "DELETE FROM `password_reset_tokens` WHERE email = ?";
+            $stmt_delete = $conn->prepare($delete_token_sql);
+            if ($stmt_delete) {
+                $stmt_delete->bind_param("s", $email);
+                $stmt_delete->execute();
+                $stmt_delete->close(); // Close delete statement
+            } else {
+                $message = "<div class='alert alert-danger'>Error preparing token cleanup: " . htmlspecialchars($conn->error) . "</div>";
             }
-        } else {
-            $error[] = 'Failed to save the token! MySQL Error: ' . mysqli_error($conn);
-        }
-    } else {
-        $error[] = 'No user found with this email address!';
-    }
-}
 
-// Display error messages, if any
-if (isset($error)) {
-    foreach ($error as $msg) {
-        echo "<div class='alert alert-danger'>$msg</div>";
+            // 3. Insert the new token into the password_reset_tokens table
+            // Assuming password_reset_tokens table has columns: email, token, (optional: created_at)
+            $insert_token_sql = "INSERT INTO `password_reset_tokens` (email, token, created_at) VALUES (?, ?, NOW())";
+            $stmt_insert = $conn->prepare($insert_token_sql);
+            if ($stmt_insert) {
+                $stmt_insert->bind_param("ss", $email, $token);
+
+                if ($stmt_insert->execute()) {
+                    // 4. Send the password reset email
+                    $mail = new PHPMailer(true);
+                    try {
+                        // Server settings
+                        $mail->isSMTP();
+                        $mail->Host       = 'smtp.gmail.com'; // Your SMTP server
+                        $mail->SMTPAuth   = true;
+                        $mail->Username   = 'snowshoe0103@gmail.com'; // Your SMTP username
+                        $mail->Password   = 'bvoa zaxb ugki vtwm'; // Your SMTP password (use App Password)
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                        $mail->Port       = 587;
+
+                        // Recipients
+                        $mail->setFrom('snowshoe0103@gmail.com', 'Alumni System Admin'); // Set a proper sender name
+                        $mail->addAddress($email, $name); // Add recipient
+
+                        // Content
+                        $mail->isHTML(true);
+                        $mail->Subject = 'Password Reset Request';
+                        // **IMPORTANT:** Update the URL to your actual domain/path
+                        $reset_link = 'http://localhost/public_html/reset_password.php?token=' . $token; // Change localhost if deploying
+                        $mail->Body    = "Hi " . htmlspecialchars($name) . ",<br><br>Click the link below to reset your password:<br>"
+                                       . "<a href='" . $reset_link . "'>" . $reset_link . "</a><br><br>"
+                                       . "If you did not request this, please ignore this email.<br><br>"
+                                       . "Thank you,<br>Alumni Management System";
+                        $mail->AltBody = "Hi " . htmlspecialchars($name) . ",\n\nClick the link below to reset your password:\n" . $reset_link . "\n\nIf you did not request this, please ignore this email.\n\nThank you,\nAlumni Management System";
+
+
+                        $mail->send();
+                        $message = "<div class='alert alert-success'>Password reset link has been sent to your email. Please check your inbox (and spam folder).</div>";
+
+                    } catch (Exception $e) {
+                        $message = "<div class='alert alert-danger'>Message could not be sent. Mailer Error: " . htmlspecialchars($mail->ErrorInfo) . "</div>";
+                    }
+                } else {
+                    $message = "<div class='alert alert-danger'>Failed to store reset token: " . htmlspecialchars($stmt_insert->error) . "</div>";
+                }
+                $stmt_insert->close(); // Close insert statement
+            } else {
+                 $message = "<div class='alert alert-danger'>Error preparing token storage: " . htmlspecialchars($conn->error) . "</div>";
+            }
+
+        } else {
+            // Email not found in the user table
+            $message = "<div class='alert alert-danger'>No user found with this email address.</div>";
+        }
+        $stmt_check->close(); // Close check statement
+    } else {
+         $message = "<div class='alert alert-danger'>Error preparing user check: " . htmlspecialchars($conn->error) . "</div>";
     }
+
+    $conn->close(); // Close database connection
 }
 ?>
 
@@ -76,12 +108,12 @@ if (isset($error)) {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Pages / Login - NiceAdmin Bootstrap Template</title>
+  <title>Forgot Password - Alumni Management System</title> <!-- Updated Title -->
   <meta content="" name="description">
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href="assets/img/favicon.png" rel="icon">
+  <link href="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" rel="icon"> <!-- Updated Favicon -->
   <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
@@ -112,9 +144,9 @@ if (isset($error)) {
             <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
 
               <div class="d-flex justify-content-center py-4">
-                <a href="index.html" class="logo d-flex align-items-center w-auto">
+                <a href="index.php" class="logo d-flex align-items-center w-auto"> <!-- Link back to index/login -->
                   <img src="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" alt="Logo">
-                  <span class="d-none d-lg-block">Bestlink Alumni Association</span>
+                  <span class="d-none d-lg-block">Alumni Management System</span> <!-- Updated Name -->
                 </a>
               </div><!-- End Logo -->
 
@@ -123,23 +155,32 @@ if (isset($error)) {
                 <div class="card-body">
 
                   <div class="pt-4 pb-2">
-                  <h1 class="card-title text-center pb-0 fs-4">Forgot your Password?</h1>
+                    <h1 class="card-title text-center pb-0 fs-4">Forgot Your Password?</h1>
+                    <p class="text-center small">Enter your email address below and we'll send you a link to reset your password.</p> <!-- Added instruction -->
                   </div>
 
-                  <form class="row g-3 " method="POST" action="forgot_pass.php">
-                    <?php
-                    if(isset($error)) { 
-                      foreach($error as $error){
-                        echo '<span class="error-msg">' . $error .'</span>';
-                      };
-                    }
-                    ?>
+                  <?php echo $message; // Display feedback message here ?>
 
-                    <form action="forgot_pass.php" method="post">
-                      <label for="email" class="card-title">Enter your email address:</label>
-                      <input type="email" id="email" name="email" class="form-control" required>
-                      <button type="submit" name="submit" class="btn btn-primary">Send Reset Link</button>
-                    </form>
+                  <!-- Removed duplicate form tag -->
+                  <form class="row g-3 needs-validation" method="POST" action="forgot_pass.php" novalidate>
+
+                    <div class="col-12">
+                      <label for="email" class="form-label">Email Address</label> <!-- Changed label -->
+                      <div class="input-group has-validation">
+                         <span class="input-group-text" id="inputGroupPrepend">@</span> <!-- Added icon -->
+                         <input type="email" id="email" name="email" class="form-control" required>
+                         <div class="invalid-feedback">Please enter your email address.</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <button type="submit" name="submit" class="btn btn-primary w-100">Send Reset Link</button>
+                    </div>
+
+                     <div class="col-12">
+                       <p class="small mb-0">Remember your password? <a href="index.php">Log in</a></p> <!-- Link back to login -->
+                     </div>
+                  </form>
 
                 </div>
               </div>
@@ -156,24 +197,6 @@ if (isset($error)) {
 
     </div>
   </main><!-- End #main -->
-
-  <!-- Success Modal -->
-  <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="successModalLabel">Success</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Password reset link has been sent to your email.
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

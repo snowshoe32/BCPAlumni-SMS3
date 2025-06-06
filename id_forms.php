@@ -12,7 +12,7 @@ if (isset($_POST['submit'])) {
     $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
     $last_name = mysqli_real_escape_string($conn, $_POST['last_name']); 
     $middle_name = mysqli_real_escape_string($conn, $_POST['middle_name']); 
-    $student_no= mysqli_real_escape_string($conn, $_POST['student_no']); 
+    $student_no = mysqli_real_escape_string($conn, $_POST['student_no']); 
     $contact = mysqli_real_escape_string($conn, $_POST['contact']);
     $e_contact = mysqli_real_escape_string($conn, $_POST['e_contact']);
     $batch = mysqli_real_escape_string($conn, $_POST['batch']);
@@ -20,11 +20,12 @@ if (isset($_POST['submit'])) {
     $course = mysqli_real_escape_string($conn, $_POST['course']);
     $photo = mysqli_real_escape_string($conn, $_POST['photo']);
     $status = mysqli_real_escape_string($conn, $_POST['status']);
-  
+    $birthdate = mysqli_real_escape_string($conn, $_POST['birthdate']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
     
     // SQL statement
-    $sql = "INSERT INTO `bcp_sms3_idapprove`( `first_name`, `last_name`, `middle_name`, `student_no`, `contact`, `e_contact`, `batch`, `address`, `course`, `photo`, `status`) 
-    VALUES ('$first_name','$last_name','$middle_name','$student_no','$contact','$e_contact','$batch','$address','$course','$photo','$status')";
+    $sql = "INSERT INTO `bcp-sms3-idmanage` (`first_name`, `last_name`, `middle_name`, `student_no`, `contact`, `e_contact`, `batch`, `address`, `course`, `photo`, `status`, `birthdate`, `email`) 
+    VALUES ('$first_name','$last_name','$middle_name','$student_no','$contact','$e_contact','$batch','$address','$course','$photo','$status','$birthdate','$email')";
 
     // Execute the query
     $result = mysqli_query($conn, $sql);
@@ -172,9 +173,9 @@ if (isset($result) && $result) {
       <h1>Add Data</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">Pages</li>
-          <li class="breadcrumb-item active">Alumni form</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Student Alumni Services</li>
+          <li class="breadcrumb-item active">ID Forms</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -299,6 +300,20 @@ if (isset($result) && $result) {
             
         </select>
         </div>
+    </div>
+
+    <form method="POST" action="id_manage.php">
+    <div class="col-md-3">
+        <label for="inputDate" class="col-sm-4 col-form-label">Date of Birth</label>
+        <div class="col-sm-10">
+            <input type="date" class="form-control" name="birthdate" id="inputDate" required>
+        </div>
+    </div>
+    
+
+    <div class="col-md-4">
+        <label for="inputEmail" class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" required>
     </div>
 
             

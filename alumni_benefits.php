@@ -1,0 +1,384 @@
+<?php
+session_start();
+if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
+    header('Location: index.php');
+    exit();
+}
+
+include "db_conn.php";
+
+$admin_name = $_SESSION['admin_name'];
+
+if (isset($result) && $result) {
+  if (mysqli_num_rows($result) > 0) {
+      $row = mysqli_fetch_array($result);
+      
+  } else {
+      echo "No admin found with the username: " . htmlspecialchars($admin_name);
+  }
+} else {
+  echo "MySQL Error: " . mysqli_error($conn);
+}
+?>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+
+    <title>Dashboard - Title</title>
+    <meta content="" name="description" />
+    <meta content="" name="keywords" />
+
+    <!-- Favicons -->
+    <link href="https://elc-public-images.s3.ap-southeast-1.amazonaws.com/bcp-olp-logo-mini2.png" rel="icon" />
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Vendor CSS Files -->
+    <link
+      href="assets/vendor/bootstrap/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="assets/vendor/bootstrap-icons/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet" />
+    <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet" />
+    <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet" />
+    <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet" />
+    <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet" />
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet" />
+  </head>
+
+  <body>
+     <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+<div class="d-flex align-items-center justify-content-between">
+  <i class="bi bi-list toggle-sidebar-btn"></i>
+</div><!-- End Logo -->
+
+<nav class="header-nav ms-auto">
+  <ul class="d-flex align-items-center">
+
+    <li class="nav-item dropdown pe-3">
+
+      <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+
+        <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'] ?></span>
+      </a><!-- End Profile Iamge Icon -->
+
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+        <li class="dropdown-header">
+          <h6><?php echo isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'] ?></h6>
+          <span></span>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+
+   
+    
+
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </a>
+        </li>
+
+      </ul><!-- End Profile Dropdown Items -->
+    </li><!-- End Profile Nav -->
+
+  </ul>
+</nav><!-- End Icons Navigation -->
+
+</header><!-- End Header -->
+
+    <!-- ======= Sidebar ======= -->
+   <!-- ======= Sidebar ======= -->
+   <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+<ul class="sidebar-nav" id="sidebar-nav">
+
+
+
+
+        <!-- Removed LC -->
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; text-align: center;">
+      <div style="font-weight: 500; color: #fff;">
+        <!-- Removed echo name -->
+      </div>
+      <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
+        <img src="assets/img/bestlinkalumnilogo1.png" alt="Bestlink Alumni Logo" style="width:130px;height: auto;">
+      </div>
+    </div>
+    <div style="margin-top: 4px; font-size: 14px; color: #fff;">
+      <h6> <span> <!-- Removed echo name --></span></h6>
+    </div>
+  </div>
+</div>
+
+<hr class="sidebar-divider">
+
+  <li class="nav-item">
+    <a class="nav-link " href="admin_dashboard.php" class="active">
+      <i class="bi bi-grid"></i>
+      <span>Dashboard</span>
+    </a>
+  </li><!-- End Dashboard Nav -->
+
+  <hr class="sidebar-divider">
+
+  <li class="nav-heading"></li>
+
+  <li class="nav-item">
+<a class="nav-link collapsed" data-bs-target="#alumnidata-nav" data-bs-toggle="collapse" href="#">
+<i class="bi bi-layout-text-window-reverse"></i><span>Alumni Data</span><i class="bi bi-chevron-down ms-auto"></i>
+</a>
+<ul id="alumnidata-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+<li>
+  <a href="student-data.php">
+    <i class="bi bi-circle"></i><span>Alumni Data</span>
+  </a>
+</li> 
+<li>
+  <a href="add.php">
+    <i class="bi bi-circle"></i><span>Add Alumni Data</span>
+  </a>
+</ul>
+</li><!-- End System Nav -->
+  <hr class="sidebar-divider">
+
+<li class="nav-item">
+<a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
+<i class="bi bi-layout-text-window-reverse"></i><span>Career Opportunities</span><i class="bi bi-chevron-down ms-auto"></i>
+</a>
+<ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+<li>
+  <a href="job-post-manage.php">
+    <i class="bi bi-circle"></i><span>Job Posting</span>
+  </a>
+</li>
+<li>
+  <a href="job-post-add.php">
+    <i class="bi bi-circle"></i><span>Add Job Posting</span>
+  </a>
+</li>
+</ul>
+<!-- Career Opportunities -->
+
+<hr class="sidebar-divider">
+
+<li class="nav-item">
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+    <li>
+      <a href="alumni_benefits.php">
+        <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+      </a>
+    </li>
+  </ul>
+</li>
+
+
+  <hr class="sidebar-divider">
+
+
+<li class="nav-item">
+    <a class="nav-link " href="accesscontrol.php" class="active">
+      <i class="bi bi-shield-lock"></i>
+      <span>Access Control</span>
+    </a>
+  </li><!-- End Dashboard Nav -->
+
+  <hr class="sidebar-divider">
+
+  <li class="nav-item">
+    <a class="nav-link " href="auditlogs.php" class="active">
+      <i class="bi bi-file-earmark-text"></i>
+      <span>Audit Logs</span>
+    </a>
+  </li><!-- End Dashboard Nav -->
+
+  <hr class="sidebar-divider">
+ 
+
+<!-- Remove Profile and Contact links -->
+<!-- End Profile Page Nav -->
+<!-- End Contact Page Nav -->
+
+</aside><!-- End Sidebar-->
+
+    <main id="main" class="main">
+      <div class="pagetitle">
+        <h1>Alumni Benefits</h1>
+        <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Alumni Online Services</li>
+            <li class="breadcrumb-item active">Alumni Benefits</li>
+          </ol>
+        </nav>
+      </div>
+      <!-- End Page Title -->
+
+      <section class="section">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Manage Alumni Benefits</h5>
+                <p></p>
+
+                <!-- Table with stripped rows -->
+                <div class="table container-table">
+                  <?php 
+                  if(isset($_GET['msg'])){
+                    $msg = $_GET['msg'];
+                    echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                   '.$msg.'
+                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>';
+                  }
+                  ?>
+                  <a href="alumni_benefits_create.php" class="btn btn-dark mb-3">Add New</a>
+                  <table class="table datatable table-hover text-center">
+                    <thead class="table">
+                      <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php
+                      include "db_conn.php";
+                      $sql = "SELECT `id`, `title`, `description`, `date`, `type` FROM `bcp-sms3_alumnibenefits` WHERE 1";
+                      $result = mysqli_query($conn, $sql);
+                      while ($row = mysqli_fetch_assoc($result)){ 
+                      ?>
+                        <tr>
+                        <td><?php echo $row['id'] ?></td>
+                        <td><?php echo $row['title'] ?></td>
+                        <td><?php echo $row['description'] ?></td>
+                        <td><?php echo $row['date'] ?></td>
+                        <td><?php echo $row['type'] ?></td>
+                        <td>
+                          <a href="alumni_benefits_edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm">
+                            <i class="bx bx-pencil"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $row['id']; ?>">
+                            <i class="bx bx-trash"></i>
+                          </a>
+                        </td>
+                        </tr> 
+
+                        <!-- Delete Confirmation Modal -->
+                        <div class="modal fade" id="deleteModal<?php echo $row['id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel<?php echo $row['id']; ?>" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="deleteModalLabel<?php echo $row['id']; ?>">Confirm Delete</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                Are you sure you want to delete the benefit titled "<strong><?php echo $row['title']; ?></strong>"?
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <a href="benefits-delete.php?id=<?php echo $row['id']; ?>" class="btn btn-danger">Delete</a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- End Delete Confirmation Modal -->
+                      <?php
+                      }
+                      ?> 
+                    </tbody>
+                  </table>
+                </div>
+                <!-- End Table with stripped rows -->
+              </div>
+            </div>
+          </div>
+        </div>
+</div>
+      </section>
+    </main>
+    <!-- End #main -->
+
+    <!-- ======= Footer ======= -->
+    <footer id="footer" class="footer">
+      <div class="copyright">
+        &copy; Copyright <strong><span>Bestlink College of the Philippines</span></strong
+        >. All Rights Reserved
+      </div>
+      <div class="credits">
+        <!-- All the links in the footer should remain intact. -->
+        <!-- You can delete the links only if you purchased the pro version. -->
+        <!-- Licensing information: https://bootstrapmade.com/license/ -->
+        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
+        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+      </div>
+    </footer>
+    <!-- End Footer -->
+
+    <a
+      href="#"
+      class="back-to-top d-flex align-items-center justify-content-center"
+      ><i class="bi bi-arrow-up-short"></i
+    ></a>
+
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/chart.js/chart.umd.js"></script>
+    <script src="assets/vendor/echarts/echarts.min.js"></script>
+    <script src="assets/vendor/quill/quill.js"></script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script src="assets/vendor/tinymce/tinymce.min.js"></script>
+    <script src="assets/vendor/php-email-form/validate.js"></script>
+
+    <!-- Template Main JS File -->
+    <script src="assets/js/main.js"></script>
+  </body>
+</html>

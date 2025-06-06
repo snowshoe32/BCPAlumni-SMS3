@@ -1,14 +1,55 @@
 <?php
 session_start();
 if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
-    header('Location: index.php');
+    echo "<script>alert('You are not allowed to access this page.');</script>";
     exit();
 }
 
 // Include the database connection file
 include 'db_conn.php';
 
-$admin_name = $_SESSION['admin_name'] ?? $_SESSION['super_admin_name'];
+$admin_name = $_SESSION['super_admin_name'];
+
+// Handle permission change
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id']) && isset($_POST['new_permission'])) {
+    $user_id = $_POST['user_id'];
+    $new_permission = $_POST['new_permission'];
+    $update_sql = "UPDATE `bcp_sms3_user` SET user_type = ? WHERE id = ?";
+    $stmt = $conn->prepare($update_sql);
+    $stmt->bind_param('si', $new_permission, $user_id);
+    $stmt->execute();
+    $stmt->close();
+    header('Location: accesscontrol.php');
+    exit();
+}
+
+// Handle user deletion
+if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['delete_user_id'])) {
+    $delete_user_id = $_GET['delete_user_id'];
+    $delete_sql = "DELETE FROM `bcp_sms3_user` WHERE id = ?";
+    $stmt = $conn->prepare($delete_sql);
+    $stmt->bind_param('i', $delete_user_id);
+    $stmt->execute();
+    $stmt->close();
+    header('Location: accesscontrol.php');
+    exit();
+}
+
+// Handle user data update
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_user_id'])) {
+    $edit_user_id = $_POST['edit_user_id'];
+    $edit_name = $_POST['edit_name'];
+    $edit_email = $_POST['edit_email'];
+    $edit_student_no = $_POST['edit_student_no'];
+    $edit_username = $_POST['edit_username'];
+    $edit_sql = "UPDATE `bcp_sms3_user` SET name = ?, email = ?, student_no = ?, username = ? WHERE id = ?";
+    $stmt = $conn->prepare($edit_sql);
+    $stmt->bind_param('sssii', $edit_name, $edit_email, $edit_student_no, $edit_username, $edit_user_id);
+    $stmt->execute();
+    $stmt->close();
+    header('Location: accesscontrol.php');
+    exit();
+}
 
 // Fetch user information
 $sql = "SELECT id, name, email, student_no, username, user_type FROM `bcp_sms3_user`";
@@ -179,34 +220,36 @@ $conn->close();
   <a href="job-post-add.php">
     <i class="bi bi-circle"></i><span>Add Job Posting</span>
   </a>
-</li>
 </ul>
 <!-- Career Opportunities -->
 
 <hr class="sidebar-divider">
 
 <li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
-</li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
+  </ul>
 </li>
 
 
@@ -242,12 +285,11 @@ $conn->close();
 
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>Data Tables</h1>
+        <h1>Access Control</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">Data</li>
+            <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+            <li class="breadcrumb-item active">Access Control</li>
           </ol>
         </nav>
       </div>
@@ -258,9 +300,10 @@ $conn->close();
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Datatables</h5>
+                <h5 class="card-title">Access Control</h5>
                 <p></p>
 
+                <?php if (isset($_SESSION['super_admin_name'])): ?>
                 <!-- Table with stripped rows -->
                 <div class="table container-table">
                   <?php 
@@ -279,7 +322,7 @@ $conn->close();
       <th scope="col">ID</th>
       <th scope="col">Name</th>
       <th scope="col">Email</th>
-      <th scope="col">Student No</th>
+     
       <th scope="col">Username</th>
       <th scope="col">User Type</th>
       <th scope="col">Action</th>
@@ -306,14 +349,20 @@ $conn->close();
       <td><?php echo $user['id'] ?></td>
       <td><?php echo $user['name'] ?></td>
       <td><?php echo $user['email'] ?></td>
-      <td><?php echo $user['student_no'] ?></td>
+     
       <td><?php echo $user['username'] ?></td>
       <td class="<?php echo $class; ?>"><?php echo $user['user_type'] ?></td>
       <td>
-        <a href="view_user.php?id=<?php echo $user['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="edit_user.php?id=<?php echo $user['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
+      
+        
         <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $user['id']; ?>">
   <i class="bx bxs-trash"></i>
+</a>
+<a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#changePermissionModal" data-id="<?php echo $user['id']; ?>" data-permission="<?php echo $user['user_type']; ?>">
+  <i class="bx bxs-key"></i>
+</a>
+<a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#editModal" data-id="<?php echo $user['id']; ?>" data-name="<?php echo $user['name']; ?>" data-email="<?php echo $user['email']; ?>" data-student_no="<?php echo $user['student_no']; ?>" data-username="<?php echo $user['username']; ?>">
+  <i class="bx bxs-edit"></i>
 </a>
       </td>
       </tr> 
@@ -347,7 +396,7 @@ $conn->close();
     
     // Update the modal's delete button with the correct delete link
     var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'delete_user.php?id=' + recordId);
+    confirmDelete.setAttribute('href', 'accesscontrol.php?delete_user_id=' + recordId);
   });
 </script>
     <?php
@@ -357,6 +406,9 @@ $conn->close();
   </tbody>
 </table>
                 <!-- End Table with stripped rows -->
+                <?php else: ?>
+                <p>You do not have permission to view this content.</p>
+                <?php endif; ?>
               </div>
             </div>
           </div>
@@ -366,10 +418,111 @@ $conn->close();
     </main>
     <!-- End #main -->
 
+    <!-- Change Permission Modal -->
+    <div class="modal fade" id="changePermissionModal" tabindex="-1" aria-labelledby="changePermissionModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="changePermissionModalLabel">Change User Permission</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="accesscontrol.php">
+            <div class="modal-body">
+              <input type="hidden" name="user_id" id="user_id">
+              <div class="mb-3">
+                <label for="new_permission" class="form-label">New Permission</label>
+                <select class="form-select" id="new_permission" name="new_permission" required>
+                  <option value="alumni">Alumni</option>
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Change Permission</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var changePermissionModal = document.getElementById('changePermissionModal');
+      changePermissionModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-id');
+        var userPermission = button.getAttribute('data-permission');
+        var modalUserId = changePermissionModal.querySelector('#user_id');
+        var modalUserPermission = changePermissionModal.querySelector('#new_permission');
+        modalUserId.value = userId;
+        modalUserPermission.value = userPermission;
+      });
+    </script>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editModalLabel">Edit User Data</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="accesscontrol.php">
+            <div class="modal-body">
+              <input type="hidden" name="edit_user_id" id="edit_user_id">
+              <div class="mb-3">
+                <label for="edit_name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="edit_name" name="edit_name" required>
+              </div>
+              <div class="mb-3">
+                <label for="edit_email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="edit_email" name="edit_email" required>
+              </div>
+              <div class="mb-3">
+                <label for="edit_student_no" class="form-label">Student No</label>
+                <input type="text" class="form-control" id="edit_student_no" name="edit_student_no" required>
+              </div>
+              <div class="mb-3">
+                <label for="edit_username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="edit_username" name="edit_username" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var editModal = document.getElementById('editModal');
+      editModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-id');
+        var userName = button.getAttribute('data-name');
+        var userEmail = button.getAttribute('data-email');
+        var userStudentNo = button.getAttribute('data-student_no');
+        var userUsername = button.getAttribute('data-username');
+        var modalUserId = editModal.querySelector('#edit_user_id');
+        var modalUserName = editModal.querySelector('#edit_name');
+        var modalUserEmail = editModal.querySelector('#edit_email');
+        var modalUserStudentNo = editModal.querySelector('#edit_student_no');
+        var modalUserUsername = editModal.querySelector('#edit_username');
+        modalUserId.value = userId;
+        modalUserName.value = userName;
+        modalUserEmail.value = userEmail;
+        modalUserStudentNo.value = userStudentNo;
+        modalUserUsername.value = userUsername;
+      });
+    </script>
+
     <!-- ======= Footer ======= -->
     <footer id="footer" class="footer">
       <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong
+        &copy; Copyright <strong><span>Bestlink College of the Philippines</span></strong
         >. All Rights Reserved
       </div>
       <div class="credits">

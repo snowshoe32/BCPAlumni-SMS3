@@ -151,7 +151,7 @@ if ($result) {
     <hr class="sidebar-divider">
 
       <li class="nav-item">
-        <a class="nav-link " href="public_dashboard.php" class="active">
+        <a class="nav-link " href="index2.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>
@@ -162,7 +162,7 @@ if ($result) {
       <li class="nav-heading"></li>
 
       <li class="nav-item">
-        <a class="nav-link " href="announcements.php" class="active">
+        <a class="nav-link " href="index2.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Announcements</span>
         </a>
@@ -175,7 +175,7 @@ if ($result) {
 
 
       <li class="nav-item">
-        <a class="nav-link " href="career.php" class="active">
+        <a class="nav-link " href="index2.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Career Opportunities</span>
         </a>
@@ -190,17 +190,17 @@ if ($result) {
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
-      <a href="id_manage.php">
+      <a href="index2.php">
         <i class="bi bi-circle"></i><span>View Alumni ID Applications</span>
       </a>
     </li>
     <li>
-      <a href="admin_managenews.php">
+      <a href="index2.php">
         <i class="bi bi-circle"></i><span>Alumni Tracer</span>
       </a>
     </li>
     <li>
-      <a href="admin_managenews.php">
+      <a href="index2.php">
         <i class="bi bi-circle"></i><span>Apply for Alumni ID</span>
       </a>
     </li>
@@ -359,7 +359,7 @@ if ($result) {
   <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
   <footer id="footer" class="footer">
     <div class="copyright">
-      &copy; <strong><span>Bestlink Alumni Association 2025</span></strong>. All Rights Reserved
+    
     </div>
     <div class="credits">
     </div>

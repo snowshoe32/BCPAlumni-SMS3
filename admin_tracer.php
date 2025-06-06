@@ -24,6 +24,25 @@ if ($result->num_rows > 0) {
     exit();
 }
 
+if (isset($_POST['generate_report'])) {
+    $filename = "tracer_data_report_" . date('Ymd') . ".csv";
+    header("Content-Type: text/csv");
+    header("Content-Disposition: attachment; filename=$filename");
+
+    $output = fopen("php://output", "w");
+    fputcsv($output, ['ID', 'Last Name', 'First Name', 'Student No', 'Email', 'Gender', 'Home Address', 'Place Of Work', 'Current Job Position']);
+
+    $query = "SELECT id, lastName, firstName, studentNo, email, gender, homeAddress, placeOfWork, currentJobPosition FROM `bcp-sms3_tracer`";
+    $result = $conn->query($query);
+
+    while ($row = $result->fetch_assoc()) {
+        fputcsv($output, $row);
+    }
+
+    fclose($output);
+    exit();
+}
+
 $conn->close();
 ?>
 
@@ -148,10 +167,7 @@ $conn->close();
       <span>Dashboard</span>
     </a>
   </li><!-- End Dashboard Nav -->
-
   <hr class="sidebar-divider">
-
-  <li class="nav-heading"></li>
 
   <li class="nav-item">
 <a class="nav-link collapsed" data-bs-target="#alumnidata-nav" data-bs-toggle="collapse" href="#">
@@ -170,9 +186,10 @@ $conn->close();
 </li>
 </ul>
 </li><!-- End System Nav -->
-  <hr class="sidebar-divider">
+<!--Alumni Online Services-->
 
-<li class="nav-item">
+  <hr class="sidebar-divider">
+  <li class="nav-item">
 <a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
 <i class="bi bi-layout-text-window-reverse"></i><span>Career Opportunities</span><i class="bi bi-chevron-down ms-auto"></i>
 </a>
@@ -190,42 +207,43 @@ $conn->close();
 </ul>
 <!-- Career Opportunities -->
 
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
-  </a>
-</li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
-</li>
 
 
   <hr class="sidebar-divider">
 
-
 <li class="nav-item">
-    <a class="nav-link " href="accesscontrol.php" class="active">
-      <i class="bi bi-shield-lock"></i>
-      <span>Access Control</span>
-    </a>
-  </li><!-- End Dashboard Nav -->
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
+  </a>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+  </ul>
+</li>
+
+  <hr class="sidebar-divider">
+
+  
+
+  <li class="nav-item">
+        <a class="nav-link " href="accesscontrol.php" class="active">
+          <i class="bi bi-shield-lock"></i>
+          <span>Access Control</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
 
   <hr class="sidebar-divider">
 
@@ -248,12 +266,12 @@ $conn->close();
 
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>Data Tables</h1>
+        <h1>Alumni Tracer</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">Data</li>
+            <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Alumni Tracer</li>
+            <li class="breadcrumb-item active">Manage Tracer</li>
           </ol>
         </nav>
       </div>
@@ -283,6 +301,10 @@ $conn->close();
                   }
                   ?>
                   <a href="tracer_form.php" class="btn btn-dark mb-3">Add New</a>
+                  <form method="POST" action="" style="display: inline;">
+                      <button type="submit" name="generate_report" class="btn btn-success mb-3">Generate Report</button>
+                  </form>
+                  <button onclick="printTable()" class="btn btn-secondary mb-3">Print Data</button>
                 <table class="table datatable  table-hover text-center">
   <thead class="table">
     <tr>
@@ -315,7 +337,7 @@ $conn->close();
       <td><?php echo $row['currentJobPosition'] ?></td>
       <td>
       <a href="view_tracer.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
+        <!-- Removed edit link -->
         <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
   <i class="bx bxs-trash"></i>
 </a>
@@ -351,8 +373,16 @@ $conn->close();
     
     // Update the modal's delete button with the correct delete link
     var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'delete.php?id=' + recordId);
+    confirmDelete.setAttribute('href', 'delete.php?id=' + recordId + '&redirect=admin_tracer.php');
   });
+
+  function printTable() {
+    const printContents = document.querySelector('.table').outerHTML;
+    const originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+  }
 </script>
     <?php
     }

@@ -1,8 +1,8 @@
 <?php   
 $dbHost = "localhost";
-$username = "root";
-$password = "";
-$dbname = "bcp-sms3";
+$username = "alum_alumnibc";
+$password = "+8C9cy*edl1mxeIo";
+$dbname = "alum_bcp_sms3";
 
 $conn = mysqli_connect($dbHost, $username, $password, $dbname);
 if (!$conn) {

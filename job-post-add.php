@@ -17,14 +17,13 @@ if (isset($_POST['submit'])) {
     $qualification = mysqli_real_escape_string($conn, $_POST['qualification']); 
     $image = mysqli_real_escape_string($conn, $_POST['image']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $salary = mysqli_real_escape_string($conn, $_POST['salary']);
     $date = mysqli_real_escape_string($conn, $_POST['date']);
     $source = mysqli_real_escape_string($conn, $_POST['source']);
     $employer = mysqli_real_escape_string($conn, $_POST['employer']);
     
     // SQL statement
-    $sql = "INSERT INTO `bcp-sms3_job` (`jobtitle`, `location`, `description`, `qualification`, `image`, `email`, `salary`, `date`, `source`, `employer`)
-            VALUES ('$jobtitle', '$location', '$description', '$qualification', '$image', '$email', '$salary', '$date', '$source', '$employer')";
+    $sql = "INSERT INTO `bcp-sms3_job` (`jobtitle`, `location`, `description`, `qualification`, `image`, `email`, `date`, `source`, `employer`)
+            VALUES ('$jobtitle', '$location', '$description', '$qualification', '$image', '$email', '$date', '$source', '$employer')";
 
     // Execute the query
     $result = mysqli_query($conn, $sql);
@@ -207,7 +206,7 @@ if (isset($result) && $result) {
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
@@ -225,7 +224,10 @@ if (isset($result) && $result) {
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
-  
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
   </ul>
 </li>
 
@@ -263,9 +265,9 @@ if (isset($result) && $result) {
       <h1>Add Data</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">Pages</li>
-          <li class="breadcrumb-item active">Add data</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Career Opportunities</li>
+          <li class="breadcrumb-item active">Add Job Posting</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -324,14 +326,6 @@ if (isset($result) && $result) {
 
         
          
-          <div class="col-md-4">
-          <label for="inputContact" class="form-label">Salary</label>
-           <input type="text" class="form-control" name="salary" 
-         oninput="this.value=this.value.replace(/[^0-9\-\,]/g,'')" required 
-         title="Salary.">
-          <div class="invalid-feedback">
-       </div>
-        </div>
   
         
   

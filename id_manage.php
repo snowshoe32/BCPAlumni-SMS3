@@ -16,7 +16,59 @@ if (isset($result) && $result) {
       echo "No admin found with the username: " . htmlspecialchars($admin_name);
   }
 } else {
-  echo "MySQL Error: " . mysqli_error($conn);
+  echo " " . mysqli_error($conn);
+}
+
+if (isset($_POST['detect'])) {
+    // Removed detection and approval logic
+    $msg = "Detection and approval functionality has been removed.";
+    header("Location: id_manage.php?msg=" . urlencode($msg));
+    exit();
+}
+
+if (isset($_POST['update_status'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['id']);
+    $new_status = mysqli_real_escape_string($conn, $_POST['status']);
+
+    $sql_update_status = "UPDATE `bcp-sms3-idmanage` SET `status` = '$new_status' WHERE `id` = '$id'";
+    if (mysqli_query($conn, $sql_update_status)) {
+        $msg = "Status for ID $id updated successfully.";
+    } else {
+        $msg = "Error updating status for ID $id: " . mysqli_error($conn);
+    }
+    header("Location: id_manage.php?msg=" . urlencode($msg));
+    exit();
+}
+
+if (isset($_POST['generate_report'])) {
+    $filename = "id_applications_report_" . date('Ymd') . ".csv";
+    header("Content-Type: text/csv");
+    header("Content-Disposition: attachment; filename=$filename");
+
+    $output = fopen("php://output", "w");
+    fputcsv($output, ['ID', 'Last Name', 'First Name', 'Middle Name', 'Student Number', 'Contact Number', 'Email', 'Birthdate', 'Status']);
+
+    $sql = "SELECT id, last_name, first_name, middle_name, student_no, contact, email, birthdate, status FROM `bcp-sms3-idmanage`";
+    $result = mysqli_query($conn, $sql);
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        fputcsv($output, $row);
+    }
+
+    fclose($output);
+    exit();
+}
+
+if (isset($_POST['delete_record'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['id']);
+    $sql_delete = "DELETE FROM `bcp-sms3-idmanage` WHERE `id` = '$id'";
+    if (mysqli_query($conn, $sql_delete)) {
+        $msg = "Record with ID $id deleted successfully.";
+    } else {
+        $msg = "Error deleting record with ID $id: " . mysqli_error($conn);
+    }
+    header("Location: id_manage.php?msg=" . urlencode($msg));
+    exit();
 }
 ?>
 
@@ -172,7 +224,6 @@ if (isset($result) && $result) {
   <a href="job-post-add.php">
     <i class="bi bi-circle"></i><span>Add Job Posting</span>
   </a>
-</li>
 </ul>
 <!-- Career Opportunities -->
 
@@ -198,6 +249,10 @@ if (isset($result) && $result) {
     <i class="bi bi-circle"></i><span>News & Announcements</span>
   </a>
 </li>
+<li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
 
 </ul>
 </li>
@@ -237,16 +292,22 @@ if (isset($result) && $result) {
       <h1>Manage ID Applications</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">Student Alumni Services</li>
-          <li class="breadcrumb-item active">Manage ID Application</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php"be>Home</a></li>
+          <li class="breadcrumb-item">Alumni Online Services</li>
+          <li class="breadcrumb-item active">Manage ID Applications</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
-    <div class="card">
+    <div class="card" style="width: 100%; min-height: auto; overflow: auto;">
             <div class="card-body">
               <h5 class="card-title">Manage Alumni ID</h5>
+
+              <!-- Generate Report Button -->
+              <form method="POST" action="" style="display: inline;">
+                  <button type="submit" name="generate_report" class="btn btn-success mb-3">Generate Report</button>
+              </form>
+              <button onclick="printTable()" class="btn btn-secondary mb-3" style="display: inline;">Print Data</button>
 
    <!-- Approval ID Applications -->
    <div class="table container-table">
@@ -260,17 +321,22 @@ if (isset($result) && $result) {
                     </div>';
                   }
                   ?>
-            
+            <form method="POST" action="">
+                <div class="input-group mb-3">
+                    <!-- Removed Detect and Update All button -->
+                </div>
+            </form>
                 <table class="table datatable  table-hover text-center">
   <thead class="table">
     <tr>
-      
       <th scope="col">ID</th>
       <th scope="col">Last Name</th>
+      <th scope="col">First Name</th>
+      <th scope="col">Middle Name</th>
       <th scope="col">Student Number</th>
-      <th scope="col">Contact</th>
-      <th scope="col">Course</th>
-      <th scope="col">Year Graduated</th>
+      <th scope="col">Contact Number</th>
+      <th scope="col">Email</th>
+      <th scope="col">Birthdate</th>
       <th scope="col">Status</th>
       <th scope="col">Action</th>
     </tr>
@@ -278,27 +344,27 @@ if (isset($result) && $result) {
   <tbody>
     <?php
     include "db_conn.php";
-    $sql = "SELECT * FROM `bcp_sms3_idapprove`";
+    $sql = "SELECT id, last_name, first_name, middle_name, student_no, contact, email, birthdate, status FROM `bcp-sms3-idmanage`";
     $result = mysqli_query($conn, $sql);
     while ($row = mysqli_fetch_assoc($result)){ 
       $student_no = $row['student_no'];
     ?>
       
       <tr>
-      
-      <td><?php echo $row['id']; ?></td>
+      <td><?php echo $row['id'] ?></td>
       <td><?php echo $row['last_name'] ?></td>
+      <td><?php echo $row['first_name'] ?></td>
+      <td><?php echo $row['middle_name'] ?></td>
       <td><?php echo $row['student_no'] ?></td>
-      <td><?php echo $row['contact'] ?></td>  
-      <td><?php echo $row['course'] ?></td>
-      <td><?php echo $row['batch'] ?></td> 
+      <td><?php echo $row['contact'] ?></td>
+      <td><?php echo $row['email'] ?></td>
+      <td><?php echo empty($row['birthdate']) ? date('Y-m-d') : $row['birthdate']; ?></td>
       <td>
       <h5> <span class= "badge 
         <?php 
-           
             if ($row['status'] === 'Pending') {
                 echo 'bg-secondary'; 
-            } elseif ($row['status'] === 'Approved') {
+            } elseif ($row['status'] === 'Received') { // Changed from 'Approved' to 'Received'
                 echo 'bg-success'; 
             } elseif ($row['status'] === 'Rejected')
             echo 'bg-danger';
@@ -309,45 +375,41 @@ if (isset($result) && $result) {
     </span></h5>
 </td>
       <td>
-      <a href="id_approval.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="ri ri-draft-fill "></i></a>
-        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
-  <i class="bx bxs-trash"></i>
-</a>
-      </td>
-      </tr> 
-    
+      <form method="POST" action="" style="display: inline;">
+        <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+        <select name="status" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+            <option value="Pending" <?php echo $row['status'] === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+            <option value="Received" <?php echo $row['status'] === 'Received' ? 'selected' : ''; ?>>Received</option> <!-- Changed from 'Approved' to 'Received' -->
+            <option value="Rejected" <?php echo $row['status'] === 'Rejected' ? 'selected' : ''; ?>>Rejected</option>
+            <option value="Error" <?php echo $row['status'] === 'Error' ? 'selected' : ''; ?>>Error</option>
+        </select>
+        <button type="submit" name="update_status" class="btn btn-sm btn-primary">Update</button>
+    </form>
+    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $row['id']; ?>">Delete</button>
+
     <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteModalLabel">Delete Data</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to delete this record?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-        <!-- The delete button where we will inject the dynamic ID -->
-        <a href="#" id="confirmDelete" class="btn btn-danger">Delete</a>
-      </div>
+    <div class="modal fade" id="deleteModal<?php echo $row['id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel<?php echo $row['id']; ?>" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel<?php echo $row['id']; ?>">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the record with ID <?php echo $row['id']; ?>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="" style="display: inline;">
+                        <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                        <button type="submit" name="delete_record" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-<script>
-  var deleteModal = document.getElementById('deleteModal');
-  deleteModal.addEventListener('show.bs.modal', function (event) {
-    // Button that triggered the modal
-    var button = event.relatedTarget;
-    // Extract the record id from data-id attribute
-    var recordId = button.getAttribute('data-id');
-    
-    // Update the modal's delete button with the correct delete link
-    var confirmDelete = deleteModal.querySelector('#confirmDelete');
-    confirmDelete.setAttribute('href', 'id_delete.php?id=' + recordId);
-  });
-</script>
+</td>
+      </tr> 
     <?php
     }
     ?> 
@@ -372,7 +434,15 @@ if (isset($result) && $result) {
 
   </div>
 
-
+<script>
+function printTable() {
+    const printContents = document.querySelector('.table').outerHTML;
+    const originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    document.body.innerHTML = originalContents;
+}
+</script>
 
 
 
@@ -385,7 +455,7 @@ if (isset($result) && $result) {
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="copyright">
-      &copy; Copyright <strong><span>XXXXXX</span></strong>. All Rights Reserved
+      &copy; Copyright <strong><span>Bestlink College of the Philippines</span></strong>. All Rights Reserved
     </div>
     <div class="credits">
       BCP

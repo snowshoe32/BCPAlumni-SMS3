@@ -7,23 +7,29 @@ if (isset($_SESSION['alumni_name'])) {
     $alumni_name = $_SESSION['alumni_name'];
 } else {
     // Redirect to login page if not logged in as alumni
-    header("Location: index.php");
+    header("Location: index2.php");
     exit();
 }
 
-$sql = "SELECT * FROM bcp_sms3_user WHERE username = '$alumni_name'";
-$result = mysqli_query($conn, $sql);
+// Correct the SQL query preparation
+$sql = "SELECT * FROM `bcp-sms3_alumnidata` WHERE `student_no` = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $alumni_name);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $alumni_fname = htmlspecialchars($row['fname']); // Display first name safely
         // Other logic for the alumni dashboard
     } else {
-        echo "No alumni found with the username: " . htmlspecialchars($alumni_name);
+        echo "No alumni found with the student number: " . htmlspecialchars($alumni_name);
     }
 } else {
-    echo "MySQL Error: " . mysqli_error($conn);
+    echo "MySQL Error: " . $conn->error;
 }
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -75,7 +81,7 @@ if ($result) {
     <li class="nav-item dropdown pe-3">
 
       <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-        <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo htmlspecialchars($alumni_name); ?></span>
+        <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $alumni_fname; ?></span>
       </a><!-- End Profile Image Icon -->
 
       <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
@@ -87,7 +93,14 @@ if ($result) {
           <hr class="dropdown-divider">
         </li>
         <li>
-          <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
+          <a class="dropdown-item d-flex align-items-center" href="data-profile.php">
+            <i class="bi bi-file-earmark-person"></i>
+            <span>Data Profile</span>
+          </a>
+        </li>
+        
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="logout_form2.php">
             <i class="bi bi-box-arrow-right"></i>
             <span>Sign Out</span>
           </a>
@@ -123,7 +136,7 @@ if ($result) {
     <hr class="sidebar-divider">
 
       <li class="nav-item">
-        <a class="nav-link " href="public_dashboard.php" class="active">
+        <a class="nav-link " href="alumni_dashboard.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>
@@ -158,14 +171,10 @@ if ($result) {
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="id_manage.php">
-        <i class="bi bi-circle"></i><span>View Alumni ID Applications</span>
-      </a>
-    </li>
+    
     <li>
       <a href="alumni_tracer.php">
         <i class="bi bi-circle"></i><span>Alumni Tracer</span>
@@ -176,9 +185,14 @@ if ($result) {
         <i class="bi bi-circle"></i><span>Apply for Alumni ID</span>
       </a>
     </li>
+    <li>
+      <a href="alumni_benefits2.php">
+        <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+      </a>
+    </li>
   </ul>
 </li>
-<!--Student Alumni Services-->
+<!--Alumni Online Services-->
 
 <!-- Remove Profile and Contact links -->
 <!-- End Profile Page Nav -->
@@ -194,7 +208,7 @@ if ($result) {
       <h1>Dashboard</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item"><a href="index.php">Home</a></li>
           <li class="breadcrumb-item active">Dashboard</li>
         </ol>
       </nav>

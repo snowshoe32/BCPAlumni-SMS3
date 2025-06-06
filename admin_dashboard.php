@@ -21,35 +21,34 @@ if (strlen($ipAddress) > 45) {
 }
 
 // Fetch user details for logging
-$username = $admin_name; // Use the logged-in username
+$username = $admin_name; 
 $sql_user_details = "SELECT name, student_no FROM bcp_sms3_user WHERE username = ?";
 $stmt_user_details = $conn->prepare($sql_user_details);
 $stmt_user_details->bind_param("s", $username);
 $stmt_user_details->execute();
 $result_user_details = $stmt_user_details->get_result();
 
+$studentNo = null; // Initialize with NULL
 if ($result_user_details && $result_user_details->num_rows > 0) {
     $user_details = $result_user_details->fetch_assoc();
     $name = $user_details['name'];
-    $studentNo = $user_details['student_no'];
+    $studentNo = $user_details['student_no']; // Get student number if available
 }
 $stmt_user_details->close();
 
 // **CHECK IF LOGGED IN ALREADY**
 // Check if the user has already logged in during this session
 if (!isset($_SESSION['logged_in'])) {
-    // If not, log the login event and set the session variable
     if (isset($_SESSION['admin_name']) || isset($_SESSION['super_admin_name'])) {
         $sql_log = "INSERT INTO `bcp-sms3_auditlogs` (user_type, student_no, username, name, event, timestamp, resource_access, ip_address) VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)";
         $stmt_log = $conn->prepare($sql_log);
-
         $action = "Logging in";
         $resource = "System";
+        // Handle NULL studentNo
         $stmt_log->bind_param("sssssss", $userType, $studentNo, $username, $name, $action, $resource, $ipAddress);
         $stmt_log->execute();
-
         $stmt_log->close();
-        $_SESSION['logged_in'] = true; // Set the session variable to indicate login has been logged
+        $_SESSION['logged_in'] = true; 
     }
 }
 
@@ -72,13 +71,38 @@ if ($result) {
 $stmt_user->close();
 
 // Fetch the count of alumni registered
-$alumni_count_sql = "SELECT COUNT(*) as alumni_count FROM bcp_sms3_user WHERE user_type = 'alumni'";
+$alumni_count_sql = "SELECT COUNT(id) as alumni_count FROM `bcp-sms3_alumnidata`";
 $alumni_count_result = mysqli_query($conn, $alumni_count_sql);
 $alumni_count = 0;
 
 if ($alumni_count_result) {
     $alumni_count_row = mysqli_fetch_assoc($alumni_count_result);
     $alumni_count = $alumni_count_row['alumni_count'];
+} else {
+    echo "MySQL Error: " . mysqli_error($conn);
+}
+  
+
+// Fetch the count of alumni tracer data
+$tracer_count_sql = "SELECT COUNT(id) as tracer_count FROM `bcp-sms3_tracer`";
+$tracer_count_result = mysqli_query($conn, $tracer_count_sql);
+$tracer_count = 0;
+
+if ($tracer_count_result) {
+    $tracer_count_row = mysqli_fetch_assoc($tracer_count_result);
+    $tracer_count = $tracer_count_row['tracer_count'];
+} else {
+    echo "MySQL Error: " . mysqli_error($conn);
+}
+
+// Fetch the count of alumni benefits
+$benefits_count_sql = "SELECT COUNT(*) as benefits_count FROM `bcp-sms3_alumnibenefits`";
+$benefits_count_result = mysqli_query($conn, $benefits_count_sql);
+$benefits_count = 0;
+
+if ($benefits_count_result) {
+    $benefits_count_row = mysqli_fetch_assoc($benefits_count_result);
+    $benefits_count = $benefits_count_row['benefits_count'];
 } else {
     echo "MySQL Error: " . mysqli_error($conn);
 }
@@ -244,7 +268,7 @@ if ($alumni_count_result) {
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
@@ -262,10 +286,13 @@ if ($alumni_count_result) {
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
-  
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
   </ul>
 </li>
-
+<!--Alumni Online Services-->
 
       <hr class="sidebar-divider">
 
@@ -301,7 +328,7 @@ if ($alumni_count_result) {
       <h1>Dashboard</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Dashboard</li>
         </ol>
       </nav>
@@ -314,96 +341,53 @@ if ($alumni_count_result) {
         <div class="col-lg-8">
           <div class="row">
 
-            <!-- Sales Card -->
+            <!-- Replace Alumni Donations Card -->
             <div class="col-xxl-4 col-md-6">
               <div class="card info-card sales-card">
-
-                <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                    <li class="dropdown-header text-start">
-                      <h6>Filter</h6>
-                    </li>
-
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
-                  </ul>
-                </div>
-
                 <div class="card-body">
-                  <h5 class="card-title">Alumni Donations <span>| Today</span></h5>
+                  <h5 class="card-title">Alumni Benefits <span></span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-cash-stack"></i>
+                      <i class="bi bi-gift"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>145</h6>
-                      <span class="text-success small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">increase</span>
-
+                      <h6><?php echo $benefits_count; ?></h6>
+                      <span class="text-success small pt-1 fw-bold">Total Alumni Benefits</span>
                     </div>
                   </div>
                 </div>
-
               </div>
-            </div><!-- End Sales Card -->
+            </div>
+            <!-- End Alumni Benefits Card -->
 
-            <!-- Revenue Card -->
+            <!-- Replace Events Organized Card -->
             <div class="col-xxl-4 col-md-6">
               <div class="card info-card revenue-card">
-
-                <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                    <li class="dropdown-header text-start">
-                      <h6>Filter</h6>
-                    </li>
-
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
-                  </ul>
-                </div>
-
                 <div class="card-body">
-                  <h5 class="card-title">Events Organized <span>| This Month</span></h5>
+                  <h5 class="card-title">Alumni Tracer Data <span></span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-calendar-check-fill"></i>
+                      <i class="bi bi-person-lines-fill"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>$3,264</h6>
-                      <span class="text-success small pt-1 fw-bold">8%</span> <span class="text-muted small pt-2 ps-1">increase</span>
-
+                      <h6><?php echo $tracer_count; ?></h6>
+                      <span class="text-success small pt-1 fw-bold">Total Alumni Tracer Records</span>
                     </div>
                   </div>
                 </div>
-
               </div>
-            </div><!-- End Revenue Card -->
+            </div>
+            <!-- End Alumni Tracer Data Card -->
 
             <!-- Customers Card -->
             <div class="col-xxl-4 col-xl-12">
 
               <div class="card info-card customers-card">
-
-                <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                    <li class="dropdown-header text-start">
-                      <h6>Filter</h6>
-                    </li>
-
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
-                  </ul>
-                </div>
-
+                <!-- Removed filter dropdown -->
                 <div class="card-body">
-                  <h5 class="card-title">Alumni Registered <span>| This Year</span></h5>
+                  <h5 class="card-title">Alumni Registered <span></span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
@@ -411,7 +395,7 @@ if ($alumni_count_result) {
                     </div>
                     <div class="ps-3">
                       <h6><?php echo $alumni_count; ?></h6>
-                      <span class="text-success small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+                      <span class="text-success small pt-1 fw-bold">Total Alumni Registered</span> <span class="text-muted small pt-2 ps-1"></span>
 
                     </div>
                   </div>
@@ -422,60 +406,61 @@ if ($alumni_count_result) {
             </div><!-- End Customers Card -->
           </div>
           <div class="col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Event Status<span>| Today</span></h5>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">ID Status Distribution</h5>
+      <canvas id="idStatusPieChart" style="width: 70%; height: 320px; margin: 0 auto;"></canvas>
+    </div>
+  </div>
+</div>
 
-            
-              <canvas id="pieChart" style="max-height: 400px;"></canvas>
-              <script>
-                document.addEventListener("DOMContentLoaded", () => {
-                  new Chart(document.querySelector('#pieChart'), {
-                    type: 'pie',
-                    data: {
-                      labels: [
-                        'Cancelled',
-                        'Upcoming',
-                        'Ongoing',
-                        'Ended'
-                      ],
-                      datasets: [{
-                        label: 'Event Status',
-                        data: [100, 50, 130, 250],
-                        backgroundColor: [
-                          'rgb(255, 99, 132)',
-                          'rgb(54, 162, 235)',
-                          'rgb(255, 205, 86)',
-                          'rgb(198, 198, 198)'
-                        ],
-                        hoverOffset: 4
-                      }]
-                    }
-                  });
-                });
-              </script>
-              </div>
-          </div>
-        </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  fetch('api/get_id_status.php')
+    .then(response => response.json())
+    .then(data => {
+      const ctx = document.getElementById('idStatusPieChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Pending', 'Received', 'Rejected', 'Error'], // Status labels
+          datasets: [{
+            label: 'ID Status Distribution',
+            data: data.values, // Count of each status
+            backgroundColor: [
+              'rgb(255, 205, 86)',  // Pending
+              'rgb(75, 192, 192)',  // Received
+              'rgb(255, 99, 132)',  // Rejected
+              'rgb(201, 203, 207)'  // Error
+            ],
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'ID Status Distribution'
+            }
+          }
+        }
+      });
+    })
+    .catch(error => console.error('Error fetching ID status data:', error));
+});
+</script>
+
         </div><!-- End Left side columns -->
        
 
 <!--recent activity -->
 <div class="col-xxl-4 col-xl-12 h-200">
         <div class="card">
-            <div class="filter">
-              <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                <li class="dropdown-header text-start">
-                  <h6>Filter</h6>
-                </li>
-
-                <li><a class="dropdown-item" href="#">Today</a></li>
-                <li><a class="dropdown-item" href="#">This Month</a></li>
-                <li><a class="dropdown-item" href="#">This Year</a></li>
-              </ul>
-            </div>
-
             <div class="card-body">
               <h5 class="card-title">Recent Activity <span>| Today</span></h5>
 
@@ -550,210 +535,16 @@ if ($alumni_count_result) {
             </div>
 
             <div class="card-body pb-0"></div>
-              <h5 class="card-title">Recent News &amp; Updates <span>| Today</span></h5>
+              
+    
 
-              <div class="news">
-                <div class="post-item clearfix">
-                  <img src="assets/img/news-1.jpg" alt="">
-                  <h4><a href="#">Alumni from Bestlink topnotcher places 1st</a></h4>
-                  <p>Sit recusandae non aspernatur laboriosam. Quia enim eligendi sed ut harum...</p>
-                </div>
-
-                <div class="post-item clearfix">
-                  <img src="assets/img/news-2.jpg" alt="">  
-                  <h4><a href="#">Quidem autem et impedit</a></h4>
-                  <p>Illo nemo neque maiores vitae officiis cum eum turos elan dries werona nande...</p>
-                </div>
-
-                <div class="post-item clearfix"></div>
-                  <img src="assets/img/news-3.jpg" alt="">
-                  <h4><a href="#">Id quia et et ut maxime similique occaecati ut</a></h4>
-                  <p>Fugiat voluptas vero eaque accusantium eos. Consequuntur sed ipsam et totam...</p>
-                </div>
-
-                <div class="post-item clearfix"></div>
-                  <img src="assets/img/news-4.jpg" alt="">
-                  <h4><a href="#">Laborum corporis quo dara net para</a></h4>
-                  <p>Qui enim quia optio. Eligendi aut asperiores enim repellendusvel rerum cuder...</p>
-                </div>
-
-                <div class="post-item clearfix"></div>
-                  <img src="assets/img/news-5.jpg" alt="">
-                  <h4><a href="#">Et dolores corrupti quae illo quod dolor</a></h4>
-                  <p>Odit ut eveniet modi reiciendis. Atque cupiditate libero beatae dignissimos eius...</p>
-                </div>
-
-              </div><!-- End sidebar recent posts-->
-
-            </div>
-          </div><!-- End News & Updates -->
-          </div>
-        <!-- End Right side columns -->
-
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Event Data</h2>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Date</th>
-              <th>Location</th>
-            </tr>
-          </thead>
-          <tbody id="events-table-body">
-            <!-- Data will be populated here by JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      fetch('api/events.php')
-        .then(response => response.json())
-        .then(data => {
-          if (data.error) {
-            console.error(data.error);
-          } else {
-            const tableBody = document.getElementById('events-table-body');
-            data.forEach(event => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${event.id}</td>
-                <td>${event.title}</td>
-                <td>${event.date}</td>
-                <td>${event.location}</td>
-              `;
-              tableBody.appendChild(row);
-            });
-
-            // Filter and display only "Alumni" specific events for the Event Status chart
-            const alumniEvents = data.filter(event => event.title.includes('Alumni'));
-            const eventStatusData = {
-              labels: ['Cancelled', 'Upcoming', 'Ongoing', 'Ended'],
-              datasets: [{
-                label: 'Event Status',
-                data: [
-                  alumniEvents.filter(event => event.status === 'Cancelled').length,
-                  alumniEvents.filter(event => event.status === 'Upcoming').length,
-                  alumniEvents.filter(event => event.status === 'Ongoing').length,
-                  alumniEvents.filter(event => event.status === 'Ended').length
-                ],
-                backgroundColor: [
-                  'rgb(255, 99, 132)',
-                  'rgb(54, 162, 235)',
-                  'rgb(255, 205, 86)',
-                  'rgb(198, 198, 198)'
-                ],
-                hoverOffset: 4
-              }]
-            };
-
-            new Chart(document.querySelector('#pieChart'), {
-              type: 'pie',
-              data: eventStatusData
-            });
-          }
-        })
-        .catch(error => console.error('Error fetching event data:', error));
-    });
-    </script>
-
-    <section class="section">
-      <div class="container">
-        <h2>Holidays</h2>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Date</th>
-              <th>Reason</th>
-              <th>Booking Date</th>
-            </tr>
-          </thead>
-          <tbody id="holidays-table-body">
-            <!-- Data will be populated here by JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <h2>Reservations</h2>
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Event Description</th>
-              <th>User Count</th>
-            </tr>
-          </thead>
-          <tbody id="reservations-table-body">
-            <!-- Data will be populated here by JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      fetch('api/holidays.php')
-        .then(response => response.json())
-        .then(data => {
-          if (data.error) {
-            console.error(data.error);
-          } else {
-            const tableBody = document.getElementById('holidays-table-body');
-            data.forEach(holiday => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${holiday.id}</td>
-                <td>${holiday.date}</td>
-                <td>${holiday.reason}</td>
-                <td>${holiday.bdate}</td>
-              `;
-              tableBody.appendChild(row);
-            });
-          }
-        })
-        .catch(error => console.error('Error fetching holidays data:', error));
-
-      fetch('api/reservations.php')
-        .then(response => response.json())
-        .then(data => {
-          if (data.error) {
-            console.error(data.error);
-          } else {
-            const tableBody = document.getElementById('reservations-table-body');
-            data.forEach(reservation => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${reservation.rdate}</td>
-                <td>${reservation.rtime}</td>
-                <td>${reservation.event_description}</td>
-                <td>${reservation.ucount}</td>
-              `;
-              tableBody.appendChild(row);
-            });
-          }
-        })
-        .catch(error => console.error('Error fetching reservations data:', error));
-    });
-    </script>
 
   </main><!-- End #main -->
 
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="copyright">
-      &copy; Copyright <strong><span>XXXXXX</span></strong>. All Rights Reserved
+      &copy;  <strong><span>Bestlink College of the Philippines</span></strong>. All Rights Reserved
     </div>
     <div class="credits">
       BCP

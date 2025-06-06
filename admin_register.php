@@ -1,25 +1,28 @@
 <?php
 session_start();
-include "db_conn.php"; 
+include "db_conn.php";
 require 'vendor/autoload.php'; // Include PHPMailer
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if (isset($_POST['submit'])) {
-    
+
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Securely hashing the password
     $user_type = mysqli_real_escape_string($conn, $_POST['user_type']);
+    $student_no = ($user_type == 'alumni' && !empty($_POST['student_no'])) 
+        ? $_POST['student_no'] // No escaping needed here
+        : NULL; // Use NULL explicitly
 
     // Check if email already exists
     $check_email = "SELECT * FROM `bcp_sms3_user` WHERE email = '$email'";
     $result_email = mysqli_query($conn, $check_email);
 
-    // Check if username already exists
-    $check_username = "SELECT * FROM `bcp_sms3_user` WHERE username = '$username'";
+    // Check if username already exists (CASE-INSENSITIVE)
+    $check_username = "SELECT * FROM `bcp_sms3_user` WHERE LOWER(username) = LOWER('$username')";
     $result_username = mysqli_query($conn, $check_username);
 
     if (mysqli_num_rows($result_email) > 0) {
@@ -28,20 +31,28 @@ if (isset($_POST['submit'])) {
         $error[] = 'This Username is already taken!';
     } else {
         $token = bin2hex(random_bytes(50)); // Generate a unique token
-        $sql = "INSERT INTO `bcp_sms3_user` (`name`, `email`,`student_no`, `username`, `password`, `user_type`, `token`, `is_verified`) 
-                VALUES ('$name', '$email','$student_no', '$username', '$password', '$user_type', '$token', 0)";
+        $token2 = bin2hex(random_bytes(50)); // Generate a unique token2
+    $stmt = $conn->prepare("INSERT INTO `bcp_sms3_user` (`name`, `email`, `student_no`, `username`, `password`, `user_type`, `token`, `token2`, `is_verified`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param("sssssssss", $name, $email, $student_no, $username, $password, $user_type, $token, $token2, $is_verified);
+        $is_verified = 0; // Initialize is_verified here
+        if ($stmt->execute()) {
+            // ... rest of your email sending code ...
+        } else {
+            $error[] = 'Failed to register the user! MySQL Error: ' . $stmt->error;
+        }
+        $stmt->close();
+    } else {
+        $error[] = 'Failed to prepare statement: ' . $conn->error;
+    }
 
-        if (mysqli_query($conn, $sql)) {
+
+
+        if ($stmt) {
             $mail = new PHPMailer(true);
             try {
-                //Server settings
-                $mail->isSMTP();
-                $mail->Host       = 'smtp.gmail.com'; // Set the SMTP server to send through
-                $mail->SMTPAuth   = true;
-                $mail->Username   = 'snowshoe0103@gmail.com'; // SMTP username
-                $mail->Password   = 'bvoa zaxb ugki vtwm'; // SMTP password (use App Password if 2-Step Verification is enabled)
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port       = 587;
+                //Server settings (your SMTP settings here)
+                // ... (Your existing email configuration) ...
 
                 //Recipients
                 $mail->setFrom('snowshoe0103@gmail.com', 'Mailer');
@@ -67,11 +78,6 @@ if (isset($_POST['submit'])) {
     }
 }
 
-if (isset($error)) {
-    foreach ($error as $msg) {
-        echo "<div class='alert alert-danger'>$msg</div>";
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -126,6 +132,11 @@ if (isset($error)) {
 
                 <div class="card-body">
                   
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+  <li class="breadcrumb-item">Admin</li>
+  <li class="breadcrumb-item active">Register</li>
+</ol>
 
                 
                   
@@ -134,7 +145,7 @@ if (isset($error)) {
                     <p class="text-center small">Enter your personal details to create account</p>
                   </div>
 
-                  <form class="row g-3" method="POST" action="pages-register.php" autocomplete="off">
+                  <form class="row g-3" method="POST" action="admin_register.php" autocomplete="off">
     <div class="col-12">
         <label for="yourName" class="form-label">Full Name</label>
         <input type="text" name="name" class="form-control" id="yourName" required>
@@ -189,12 +200,16 @@ function togglePasswordVisibility() {
 
     <div class="col-12">
         <label for="userType" class="form-label">User Type</label>
-        <select name="user_type" class="form-control" required>
+        <select name="user_type" class="form-control" id="userType" required onchange="toggleStudentNoField()">
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
             <option value="alumni">Alumni</option>
             <option value="super_admin">Super Admin</option>
         </select>
+    </div>
+    <div class="col-12" id="studentNoField" style="display: none;">
+        <label for="studentNo" class="form-label">Student Number</label>
+        <input type="text" name="student_no" class="form-control" id="studentNo" autocomplete="off">
     </div>
 
     <div class="col-12">
@@ -282,135 +297,27 @@ function togglePasswordVisibility() {
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
- <!-- ======= Sidebar ======= -->
- <aside id="sidebar" class="sidebar">
+  <script>
+    function toggleStudentNoField() {
+      var userType = document.getElementById("userType").value;
+      var studentNoField = document.getElementById("studentNoField");
+      if (userType === "alumni") {
+        studentNoField.style.display = "block";
+      } else {
+        studentNoField.style.display = "none";
+      }
+    }
+  </script>
 
-<ul class="sidebar-nav" id="sidebar-nav">
-
-
-
-
-        <!-- Removed LC -->
-    </div>
-    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px; text-align: center;">
-      <div style="font-weight: 500; color: #fff;">
-        <!-- Removed echo name -->
-      </div>
-      <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
-        <img src="assets/img/bestlinkalumnilogo1.png" alt="Bestlink Alumni Logo" style="width:130px;height: auto;">
-      </div>
-    </div>
-    <div style="margin-top: 4px; font-size: 14px; color: #fff;">
-      <h6> <span> <!-- Removed echo name --></span></h6>
-    </div>
-  </div>
-</div>
-
-<hr class="sidebar-divider">
-
-  <li class="nav-item">
-    <a class="nav-link " href="admin_dashboard.php" class="active">
-      <i class="bi bi-grid"></i>
-      <span>Dashboard</span>
-    </a>
-  </li><!-- End Dashboard Nav -->
-
-  <hr class="sidebar-divider">
-
-  <li class="nav-heading"></li>
-
-  <li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#alumnidata-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Alumni Data</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="alumnidata-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-<li>
-  <a href="student-data.php">
-    <i class="bi bi-circle"></i><span>Alumni Data</span>
-  </a>
-</li> 
-<li>
-  <a href="add.php">
-    <i class="bi bi-circle"></i><span>Add Alumni Data</span>
-  </a>
-</li>
-</ul>
-</li><!-- End System Nav -->
-  <hr class="sidebar-divider">
-
-<li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Career Opportunities</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="job-post-manage.php">
-    <i class="bi bi-circle"></i><span>Job Posting</span>
-  </a>
-</li>
-<li>
-  <a href="job-post-add.php">
-    <i class="bi bi-circle"></i><span>Add Job Posting</span>
-  </a>
-</li>
-</ul>
-<!-- Career Opportunities -->
-
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
-  </a>
-</li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
-</li>
-
-
-  <hr class="sidebar-divider">
-
-
-<li class="nav-item">
-    <a class="nav-link " href="accesscontrol.php" class="active">
-      <i class="bi bi-shield-lock"></i>
-      <span>Access Control</span>
-    </a>
-  </li><!-- End Dashboard Nav -->
-
-  <hr class="sidebar-divider">
-
-  <li class="nav-item">
-    <a class="nav-link " href="auditlogs.php" class="active">
-      <i class="bi bi-file-earmark-text"></i>
-      <span>Audit Logs</span>
-    </a>
-  </li><!-- End Dashboard Nav -->
-
-  <hr class="sidebar-divider">
- 
-
-<!-- Remove Profile and Contact links -->
-<!-- End Profile Page Nav -->
-<!-- End Contact Page Nav -->
-
-</aside><!-- End Sidebar-->
+<!-- Remove Sidebar Section -->
+<!-- 
+<aside id="sidebar" class="sidebar">
+  <ul class="sidebar-nav" id="sidebar-nav">
+    <!-- Removed LC -->
+    <!-- ...existing code... -->
+  </ul>
+</aside>
+-->
 
 </body>
-
 </html>

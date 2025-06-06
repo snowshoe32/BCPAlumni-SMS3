@@ -253,7 +253,7 @@ if ($result) {
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
     <li>
@@ -268,7 +268,7 @@ if ($result) {
     </li>
   </ul>
 </li>
-<!--Student Alumni Services-->
+<!--Alumni Online Services-->
 
       <hr class="sidebar-divider">
 

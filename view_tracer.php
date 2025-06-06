@@ -231,6 +231,10 @@ $conn->close();
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
   </ul>
 </li>
 <!--Student Alumni Services-->
@@ -360,7 +364,7 @@ $conn->close();
           </div>
          
           <div class="text-center">
-            <a href="student-data.php" class="btn btn-primary">Back</a>
+            <a href="admin_tracer.php" class="btn btn-primary">Back</a>
           </div>
         </form><!-- End Multi Columns Form -->
       </div>

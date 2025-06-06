@@ -7,72 +7,80 @@ if (!isset($_SESSION['admin_name']) && !isset($_SESSION['super_admin_name'])) {
 include "db_conn.php";
 $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : $_SESSION['super_admin_name'];
 
-$id = isset($_GET['id']) ? $_GET['id'] : '';
+$student_no = isset($_GET['student_no']) ? $_GET['student_no'] : '';
 
-if (empty($id)) {
-    echo "Invalid ID.";
+if (empty($student_no)) {
+    echo "Invalid Student Number.";
     exit();
 }
 
-// Fetch data from the API using cURL
-$api_url = 'https://sis.bcpsms3.com/api/alumni';
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $api_url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-$response = curl_exec($ch);
-curl_close($ch);
+// Check database connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
-$alumni_data = json_decode($response, true);
+// Fetch data from the database
+$sql = "SELECT student_no, lname, fname, mname, address, contact, course, birthday, yearGraduated, email FROM bcp_sms3_alumnidata1 WHERE student_no = ?";
+$stmt = $conn->prepare($sql);
 
-if ($alumni_data === null || !isset($alumni_data['data'][0])) {
-    echo "Error fetching data from API.";
+if (!$stmt) {
+    die("SQL error: " . $conn->error); // Log SQL error if prepare() fails
+}
+
+$stmt->bind_param("s", $student_no);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    echo "No data found for the given Student Number.";
     exit();
 }
 
-$row = $alumni_data['data'][0];
+$row = $result->fetch_assoc();
+$stmt->close();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = [
-        'id' => $_POST['id'],
-        'first_name' => $_POST['first_name'],
-        'middle_name' => $_POST['middle_name'],
-        'last_name' => $_POST['last_name'],
-        'suffix_name' => $_POST['suffix_name'],
-        'age' => $_POST['age'],
-        'gender' => $_POST['gender'],
-        'birthdate' => $_POST['birthdate'],
-        'religion' => $_POST['religion'],
-        'place_of_birth' => $_POST['place_of_birth'],
-        'current_address' => $_POST['current_address'],
-        'email_address' => $_POST['email_address'],
-        'contact_number' => $_POST['contact_number'],
-        'enrollment_date' => $_POST['enrollment_date'],
-        'program_id' => $_POST['program_id'],
-        'desired_major' => $_POST['desired_major'],
-        'enrollment_status' => $_POST['enrollment_status'],
-        'created_at' => $_POST['created_at'],
-        'updated_at' => $_POST['updated_at']
-    ];
+    $sql = "UPDATE `bcp_sms3_alumnidata1` 
+            SET `student_no` = ?, 
+                `lname` = ?, 
+                `fname` = ?, 
+                `mname` = ?, 
+                `Address` = ?, 
+                `contact` = ?, 
+                `course` = ?, 
+                `birthday` = ?, 
+                `yearGraduated` = ?, 
+                `email` = ? 
+            WHERE 1";
+    $stmt = $conn->prepare($sql);
 
-    $api_url = 'https://sis.bcpsms3.com/api/alumni/' . $data['id'];
-    $ch = curl_init($api_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json',
-        'Content-Length: ' . strlen(json_encode($data))
-    ]);
+    if (!$stmt) {
+        die("SQL error: " . $conn->error); // Log SQL error if prepare() fails
+    }
 
-    $response = curl_exec($ch);
-    curl_close($ch);
+    $stmt->bind_param(
+        "ssssssssss",
+        $_POST['student_no'],
+        $_POST['last_name'],
+        $_POST['first_name'],
+        $_POST['middle_name'],
+        $_POST['address'],
+        $_POST['contact'],
+        $_POST['course'],
+        $_POST['birthday'],
+        $_POST['yearGraduated'],
+        $_POST['email']
+    );
 
-    if ($response === false) {
-        echo "Error updating data.";
-    } else {
+    if ($stmt->execute()) {
         header('Location: student-data.php');
         exit();
+    } else {
+        echo "Error updating data.";
     }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
 
@@ -294,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Alumni Data</li>
-          <li class="breadcrumb-item active">View data</li>
+          <li class="breadcrumb-item active">Edit Alumni Data</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -305,95 +313,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Multi Columns Form -->
         <form class="row g-3" method="post">
-          <div class="col-md-10">
-            <label class="form-label">ID</label>
-            <input type="text" class="form-control" name="id" value="<?php echo htmlspecialchars($row['id']) ?>" required>
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">First Name</label>
-            <input type="text" class="form-control" name="first_name" value="<?php echo htmlspecialchars($row['first_name']) ?>" required>
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Middle Name</label>
-            <input type="text" class="form-control" name="middle_name" value="<?php echo htmlspecialchars($row['middle_name']) ?>" required>
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Last Name</label>
-            <input type="text" class="form-control" name="last_name" value="<?php echo htmlspecialchars($row['last_name']) ?>" required>
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Suffix Name</label>
-            <input type="text" class="form-control" name="suffix_name" value="<?php echo htmlspecialchars($row['suffix_name']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Age</label>
-            <input type="text" class="form-control" name="age" value="<?php echo htmlspecialchars($row['age']) ?>">
-          </div>
-          <div class="col-md-3">
-            <label for="inputState" class="form-label">Gender</label>
-            <select id="gender" class="form-select" name="gender">
-              <option value="">Choose...</option>
-              <option value="M" <?php echo ($row['gender'] == 'male') ? 'selected' : ''; ?>>Male</option>
-              <option value="F" <?php echo ($row['gender'] == 'female') ? 'selected' : ''; ?>>Female</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="inputDate" class="col-sm-4 col-form-label">Date of Birth</label>
-            <div class="col-sm-10">
-              <input type="date" class="form-control" name="birthdate" id="inputDate" required value="<?php echo htmlspecialchars($row['birthdate']) ?>">
+            <div class="col-md-10">
+                <label class="form-label">Student Number</label>
+                <input type="text" class="form-control" name="student_no" value="<?php echo htmlspecialchars($row['student_no']) ?>" disabled>
             </div>
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Religion</label>
-            <input type="text" class="form-control" name="religion" value="<?php echo htmlspecialchars($row['religion']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Place of Birth</label>
-            <input type="text" class="form-control" name="place_of_birth" value="<?php echo htmlspecialchars($row['place_of_birth']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Current Address</label>
-            <input type="text" class="form-control" name="current_address" value="<?php echo htmlspecialchars($row['current_address']) ?>">
-          </div>
-          <div class="col-md-6">
-            <label for="inputEmail" class="form-label">Email</label>
-            <input type="email" class="form-control" name="email_address" value="<?php echo htmlspecialchars($row['email_address']) ?>">
-          </div>
-          <div class="col-md-4">
-            <label for="inputContact" class="form-label">Contact Number</label>
-            <input type="text" class="form-control" pattern="\d{11}" name="contact_number" maxlength="11" oninput="this.value=this.value.replace(/[^0-9]/g,'')" required value="<?php echo htmlspecialchars($row['contact_number']) ?>" title="Contact number must be exactly 11 digits.">
-            <div class="invalid-feedback">
-              Please enter exactly 11 numeric digits for the contact number.
+            <div class="col-md-10">
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-control" name="last_name" value="<?php echo htmlspecialchars($row['lname']) ?>" required>
             </div>
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Enrollment Date</label>
-            <input type="date" class="form-control" name="enrollment_date" value="<?php echo htmlspecialchars($row['enrollment_date']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Program ID</label>
-            <input type="text" class="form-control" name="program_id" value="<?php echo htmlspecialchars($row['program_id']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Desired Major</label>
-            <input type="text" class="form-control" name="desired_major" value="<?php echo htmlspecialchars($row['desired_major']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Enrollment Status</label>
-            <input type="text" class="form-control" name="enrollment_status" value="<?php echo htmlspecialchars($row['enrollment_status']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Created At</label>
-            <input type="text" class="form-control" name="created_at" value="<?php echo htmlspecialchars($row['created_at']) ?>">
-          </div>
-          <div class="col-md-10">
-            <label class="form-label">Updated At</label>
-            <input type="text" class="form-control" name="updated_at" value="<?php echo htmlspecialchars($row['updated_at']) ?>">
-          </div>
-          <div class="text-center">
-          <button type="submit" class="btn btn-primary" name="submit">Update</button>
-            <a href="student-data.php" class="btn btn-primary">Back</a>
-          </div>
+            <div class="col-md-10">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-control" name="first_name" value="<?php echo htmlspecialchars($row['fname']) ?>" required>
+            </div>
+            <div class="col-md-10">
+                <label class="form-label">Middle Name</label>
+                <input type="text" class="form-control" name="middle_name" value="<?php echo htmlspecialchars($row['mname']) ?>">
+            </div>
+            <div class="col-md-10">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" name="address" value="<?php echo htmlspecialchars($row['address']) ?>">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Contact Number</label>
+                <input type="text" class="form-control" name="contact" value="<?php echo htmlspecialchars($row['contact']) ?>" required>
+            </div>
+            <div class="col-md-10">
+                <label class="form-label">Course</label>
+                <select class="form-control" name="course" required>
+                    <option value="" selected disabled hidden>Choose...</option>
+                    <option value="BLIS" <?php echo $row['course'] == 'BLIS' ? 'selected' : ''; ?>>BLIS</option>
+                    <option value="BSAIS" <?php echo $row['course'] == 'BSAIS' ? 'selected' : ''; ?>>BSAIS</option>
+                    <option value="BSCPE" <?php echo $row['course'] == 'BSCPE' ? 'selected' : ''; ?>>BSCPE</option>
+                    <option value="BSCRIM" <?php echo $row['course'] == 'BSCRIM' ? 'selected' : ''; ?>>BSCRIM</option>
+                    <option value="BSENTREP" <?php echo $row['course'] == 'BSENTREP' ? 'selected' : ''; ?>>BSENTREP</option>
+                    <option value="BSHM" <?php echo $row['course'] == 'BSHM' ? 'selected' : ''; ?>>BSHM</option>
+                    <option value="BSIT" <?php echo $row['course'] == 'BSIT' ? 'selected' : ''; ?>>BSIT</option>
+                    <option value="BSOA" <?php echo $row['course'] == 'BSOA' ? 'selected' : ''; ?>>BSOA</option>
+                    <option value="BSP" <?php echo $row['course'] == 'BSP' ? 'selected' : ''; ?>>BSP</option>
+                    <option value="BSTM" <?php echo $row['course'] == 'BSTM' ? 'selected' : ''; ?>>BSTM</option>
+                    <option value="BSBA-HRM" <?php echo $row['course'] == 'BSBA-HRM' ? 'selected' : ''; ?>>BSBA-HRM</option>
+                    <option value="BSBA-MM" <?php echo $row['course'] == 'BSBA-MM' ? 'selected' : ''; ?>>BSBA-MM</option>
+                    <option value="CTE-BSED English" <?php echo $row['course'] == 'CTE-BSED English' ? 'selected' : ''; ?>>CTE-BSED English</option>
+                    <option value="CTE-BSED Filipino" <?php echo $row['course'] == 'CTE-BSED Filipino' ? 'selected' : ''; ?>>CTE-BSED Filipino</option>
+                    <option value="CTE-BSED Math" <?php echo $row['course'] == 'CTE-BSED Math' ? 'selected' : ''; ?>>CTE-BSED Math</option>
+                    <option value="CTE-BSED Science" <?php echo $row['course'] == 'CTE-BSED Science' ? 'selected' : ''; ?>>CTE-BSED Science</option>
+                    <option value="CTE-BSED Social Studies" <?php echo $row['course'] == 'CTE-BSED Social Studies' ? 'selected' : ''; ?>>CTE-BSED Social Studies</option>
+                    <option value="CTE-BSED Values" <?php echo $row['course'] == 'CTE-BSED Values' ? 'selected' : ''; ?>>CTE-BSED Values</option>
+                    <option value="CTE-BTLED" <?php echo $row['course'] == 'CTE-BTLED' ? 'selected' : ''; ?>>CTE-BTLED</option>
+                    <option value="CTE-BPED" <?php echo $row['course'] == 'CTE-BPED' ? 'selected' : ''; ?>>CTE-BPED</option>
+                    <option value="CTE-BEED" <?php echo $row['course'] == 'CTE-BEED' ? 'selected' : ''; ?>>CTE-BEED</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="inputDate" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" name="birthday" value="<?php echo htmlspecialchars($row['birthday']); ?>" required>
+            </div>
+            <div class="col-md-3">
+                <label for="inputYearGraduated" class="form-label">Year Graduated</label>
+                <select class="form-control" name="yearGraduated" required>
+                    <option value="" selected disabled hidden>Choose...</option>
+                    <?php
+                    for ($year = 2002; $year <= 2025; $year++) {
+                        echo '<option value="' . $year . '"' . ($row['yearGraduated'] == $year ? ' selected' : '') . '>' . $year . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($row['email']) ?>">
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="student-data.php" class="btn btn-primary">Back</a>
+            </div>
         </form><!-- End Multi Columns Form -->
       </div>
     </div>

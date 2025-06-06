@@ -5,24 +5,30 @@ include 'db_conn.php';
 // Check if user is logged in and is an alumni
 if (isset($_SESSION['alumni_name'])) {
     $alumni_name = $_SESSION['alumni_name'];
+    $alumni_fname = $_SESSION['alumni_fname'] ?? ''; // Declare alumni_fname with a default value
 } else {
     // Redirect to login page if not logged in as alumni
     header("Location: index.php");
     exit();
 }
 
-$sql = "SELECT * FROM bcp_sms3_user WHERE username = 'Guest'";
-$result = mysqli_query($conn, $sql);
+// Corrected SQL query preparation
+$sql = "SELECT * FROM `bcp-sms3_alumnidata` WHERE `student_no` = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $alumni_name);
+$stmt->execute();
+$result = $stmt->get_result();
 
 if ($result) {
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_array($result);
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $alumni_fname = htmlspecialchars($row['fname']); // Display first name safely
         // Other logic for the admin dashboard
     } else {
         echo "No admin found with the username: Guest";
     }
 } else {
-    echo "MySQL Error: " . mysqli_error($conn);
+    echo "MySQL Error: " . $conn->error;
 }
 ?>
 
@@ -62,44 +68,50 @@ if ($result) {
 
 <body>
 
-  <!-- ======= Header ======= -->
-  <header id="header" class="header fixed-top d-flex align-items-center">
+ <!-- ======= Header ======= -->
+ <header id="header" class="header fixed-top d-flex align-items-center">
 
-    <div class="d-flex align-items-center justify-content-between">
-      <i class="bi bi-list toggle-sidebar-btn"></i>
-    </div><!-- End Logo -->
+<div class="d-flex align-items-center justify-content-between">
+  <i class="bi bi-list toggle-sidebar-btn"></i>
+</div><!-- End Logo -->
 
-    <nav class="header-nav ms-auto">
-      <ul class="d-flex align-items-center">
+<nav class="header-nav ms-auto">
+  <ul class="d-flex align-items-center">
 
-        <li class="nav-item dropdown pe-3">
+    <li class="nav-item dropdown pe-3">
 
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo htmlspecialchars($alumni_name); ?></span>
-          </a><!-- End Profile Image Icon -->
+      <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+        <span class="d-none d-md-block dropdown-toggle ps-2"><?php echo $alumni_fname; ?></span>
+      </a><!-- End Profile Image Icon -->
 
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-            <li class="dropdown-header">
-              <h6><?php echo htmlspecialchars($alumni_name); ?></h6>
-              <span></span>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="logout_form.php">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Sign Out</span>
-              </a>
-            </li>
-          </ul><!-- End Profile Dropdown Items -->
-        </li><!-- End Profile Nav -->
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+        <li class="dropdown-header">
+          <h6><?php echo htmlspecialchars($alumni_name); ?></h6>
+          <span></span>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="data-profile.php">
+            <i class="bi bi-file-earmark-person"></i>
+            <span>Data Profile</span>
+          </a>
+        </li>
+        
+        <li>
+          <a class="dropdown-item d-flex align-items-center" href="logout_form2.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </a>
+        </li>
+      </ul><!-- End Profile Dropdown Items -->
+    </li><!-- End Profile Nav -->
 
-      </ul>
-    </nav><!-- End Icons Navigation -->
+  </ul>
+</nav><!-- End Icons Navigation -->
 
-  </header><!-- End Header -->
-
+</header><!-- End Header -->
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
 
@@ -108,7 +120,7 @@ if ($result) {
       </div>
       <div class="flex items-center justify-center" style="display: flex; align-items: center; justify-content: center; margin-top: 40px;">
         <img src="assets/img/bestlinkalumnilogo1.png" alt="Bestlink Alumni Logo" style="width:130px;height: auto;">
-       
+
       </div>
 
     
@@ -124,7 +136,7 @@ if ($result) {
     <hr class="sidebar-divider">
 
       <li class="nav-item">
-        <a class="nav-link " href="public_dashboard.php" class="active">
+        <a class="nav-link " href="alumni_dashboard.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>
@@ -134,16 +146,17 @@ if ($result) {
 
       <li class="nav-heading"></li>
 
-    
       <li class="nav-item">
         <a class="nav-link " href="announcements.php" class="active">
           <i class="bi bi-grid"></i>
           <span>Announcements</span>
         </a>
       </li><!-- Announcements Nav -->
-</li><!-- End System Nav -->
 
+  
+</li><!-- End System Nav -->
       <hr class="sidebar-divider">
+
 
 
       <li class="nav-item">
@@ -153,31 +166,33 @@ if ($result) {
         </a>
       </li><!-- Announcements Nav -->
 
+
 <hr class="sidebar-divider">
 
 <li class="nav-item">
   <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
   <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    
     <li>
-      <a href="id_manage.php">
-        <i class="bi bi-circle"></i><span>View Alumni ID Applications</span>
-      </a>
-    </li>
-    <li>
-      <a href="admin_managenews.php">
+      <a href="alumni_tracer.php">
         <i class="bi bi-circle"></i><span>Alumni Tracer</span>
       </a>
     </li>
     <li>
-      <a href="admin_managenews.php">
+      <a href="id_application.php">
         <i class="bi bi-circle"></i><span>Apply for Alumni ID</span>
       </a>
     </li>
+    <li>
+      <a href="alumni_benefits2.php">
+        <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+      </a>
+    </li>
   </ul>
 </li>
-<!--Student Alumni Services-->
+<!--Alumni Online Services-->
 
 <!-- Remove Profile and Contact links -->
 <!-- End Profile Page Nav -->
@@ -185,78 +200,17 @@ if ($result) {
 
 <hr class="sidebar-divider">
 
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#alumnidata-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Data</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="alumnidata-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="student-data.php">
-        <i class="bi bi-circle"></i><span>Manage Alumni Data</span>
-      </a>
-    </li> 
-    <li>
-      <a href="add.php">
-        <i class="bi bi-circle"></i><span>Add new Alumni</span>
-      </a>
-    </li>
-  </ul>
-</li><!-- End System Nav -->
-
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#careers-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Career Opportunities</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="careers-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="job-post-manage.php">
-        <i class="bi bi-circle"></i><span>Manage Job Posting</span>
-      </a>
-    </li>
-    <li>
-      <a href="job-post-add.php">
-        <i class="bi bi-circle"></i><span>Add Job Posting</span>
-      </a>
-    </li>
-  </ul>
-<!-- Career Opportunities -->
-
-<hr class="sidebar-divider">
-
-<li class="nav-item">
-  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-    <i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-  </a>
-  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-    <li>
-      <a href="id_manage.php">
-        <i class="bi bi-circle"></i><span>Manage Alumni ID Applications</span>
-      </a>
-    </li>
-    <li>
-      <a href="admin_tracer.php">
-        <i class="bi bi-circle"></i><span>News & Announcements</span>
-      </a>
-    </li>
-  </ul>
-</li>
-<!--Student Alumni Services-->
-
-<!-- Remove Profile and Contact links -->
-<!-- End Profile Page Nav -->
-<!-- End Contact Page Nav -->
   </aside><!-- End Sidebar-->
 
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Dashboard</h1>
+      <h1>ID Application</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Dashboard</li>
+          <li class="breadcrumb-item"><a href="public_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Student Alumni Services</li>
+          <li class="breadcrumb-item active">ID Application</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -266,34 +220,34 @@ if ($result) {
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Alumni ID Application</h5>
-          <form action="submit_application.php" method="post">
+          <form action="submit_application.php" method="post" autocomplete="off">
             <div class="mb-3">
               <label for="last_name" class="form-label">Last Name</label>
-              <input type="text" class="form-control" id="last_name" name="last_name" required>
+              <input type="text" class="form-control" id="last_name" name="last_name" autocomplete="off" required>
             </div>
             <div class="mb-3">
               <label for="first_name" class="form-label">First Name</label>
-              <input type="text" class="form-control" id="first_name" name="first_name" required>
+              <input type="text" class="form-control" id="first_name" name="first_name" autocomplete="off" required>
             </div>
             <div class="mb-3">
               <label for="middle_name" class="form-label">Middle Name</label>
-              <input type="text" class="form-control" id="middle_name" name="middle_name">
+              <input type="text" class="form-control" id="middle_name" name="middle_name" autocomplete="off">
             </div>
             <div class="mb-3">
-              <label for="student_number" class="form-label">Student Number</label>
-              <input type="text" class="form-control" id="student_number" name="student_number" maxlength="11" pattern="\d{11}" required>
+              <label for="student_no" class="form-label">Student Number</label>
+              <input type="text" class="form-control" id="student_no" name="student_no" pattern="\d{8}" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '');" autocomplete="off" required title="Student number must be exactly 8 digits.">
             </div>
             <div class="mb-3">
-              <label for="contact_number" class="form-label">Contact Number</label>
-              <input type="text" class="form-control" id="contact_number" name="contact_number" maxlength="11" pattern="\d{11}" required>
+              <label for="contact" class="form-label">Contact Number</label>
+              <input type="text" class="form-control" id="contact" name="contact" maxlength="11" pattern="\d{11}" autocomplete="off" required>
             </div>
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
+              <input type="email" class="form-control" id="email" name="email" autocomplete="off" required>
             </div>
             <div class="mb-3">
               <label for="birthdate" class="form-label">Birthdate</label>
-              <input type="date" class="form-control" id="birthdate" name="birthdate" required>
+              <input type="date" class="form-control" id="birthdate" name="birthdate" autocomplete="off" required>
             </div>
             <button type="submit" class="btn btn-primary">Submit</button>
           </form>

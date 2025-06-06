@@ -163,7 +163,6 @@ if (isset($result) && $result) {
   <a href="add.php">
     <i class="bi bi-circle"></i><span>Add Alumni Data</span>
   </a>
-</li>
 </ul>
 </li><!-- End System Nav -->
   <hr class="sidebar-divider">
@@ -189,27 +188,30 @@ if (isset($result) && $result) {
 <hr class="sidebar-divider">
 
 <li class="nav-item">
-<a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
-<i class="bi bi-layout-text-window-reverse"></i><span>Student Alumni Services</span><i class="bi bi-chevron-down ms-auto"></i>
-</a>
-<ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-<li>
-  <a href="id_manage.php">
-    <i class="bi bi-circle"></i><span>ID Applications</span>
+  <a class="nav-link collapsed" data-bs-target="#students-nav" data-bs-toggle="collapse" href="#">
+    <i class="bi bi-layout-text-window-reverse"></i><span>Alumni Online Services</span><i class="bi bi-chevron-down ms-auto"></i>
   </a>
-</li>
-<li>
-  <a href="admin_tracer.php">
-    <i class="bi bi-circle"></i><span>Alumni Tracer</span>
-  </a>
-</li>
-<li>
-  <a href="admin_managenews.php">
-    <i class="bi bi-circle"></i><span>News & Announcements</span>
-  </a>
-</li>
-
-</ul>
+  <ul id="students-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+    <li>
+      <a href="id_manage.php">
+        <i class="bi bi-circle"></i><span>ID Applications</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_tracer.php">
+        <i class="bi bi-circle"></i><span>Alumni Tracer</span>
+      </a>
+    </li>
+    <li>
+      <a href="admin_managenews.php">
+        <i class="bi bi-circle"></i><span>News & Announcements</span>
+      </a>
+    </li>
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
+  </ul>
 </li>
 
 
@@ -243,12 +245,12 @@ if (isset($result) && $result) {
 
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>Data Tables</h1>
+        <h1>Job Posting</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-            <li class="breadcrumb-item">Tables</li>
-            <li class="breadcrumb-item active">Data</li>
+            <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Career Opportunities</li>
+            <li class="breadcrumb-item active">Manage Job Postings</li>
           </ol>
         </nav>
       </div>
@@ -259,7 +261,7 @@ if (isset($result) && $result) {
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Datatables</h5>
+                <h5 class="card-title">Manage Job Postings</h5>
                 <p>
                  
                 
@@ -285,7 +287,6 @@ if (isset($result) && $result) {
       <th scope="col">Job Title</th>
       <th scope="col">Locations</th>
       <th scope="col">Email</th>
-      <th scope="col">Salary</th>
       <th scope="col">Date</th>
       <th scope="col">Source</th>
       <th scope="col">Employer</th>
@@ -304,16 +305,16 @@ if (isset($result) && $result) {
       <td><?php echo $row['jobtitle'] ?></td> 
       <td><?php echo $row['location'] ?></td>
       <td><?php echo $row['email'] ?></td>   
-      <td>₱<?php echo $row['salary'] ?></td>
       <td><?php echo $row['date'] ?></td>
       <td><?php echo $row['source'] ?></td>
       <td><?php echo $row['employer'] ?></td>
       <td>
-      <a href="job-post-view.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bx-show-alt "></i></a>
-        <a href="job-post-edit.php?id=<?php echo $row['id']?>" class="fas fa-pen-square black-icon" style="font-size:24px;"><i class="bx bxs-edit "></i></a>
-        <a href="#" class="fas fa-pen-square black-icon" style="font-size:24px" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="<?php echo $row['id']; ?>">
-  <i class="bx bxs-trash"></i>
-</a>
+        <a href="job-post-edit.php?id=<?php echo $row['id']; ?>" class="btn btn-sm">
+          <i class="bx bx-pencil"></i>
+        </a>
+        <a href="job-post-delete.php?id=<?php echo $row['id']; ?>" class="btn btn-sm">
+          <i class="bx bx-trash"></i> 
+        </a>
       </td>
       </tr> 
     
@@ -368,7 +369,7 @@ if (isset($result) && $result) {
     <!-- ======= Footer ======= -->
     <footer id="footer" class="footer">
       <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong
+        &copy; Copyright <strong><span>Bestlink College of the Philippines</span></strong
         >. All Rights Reserved
       </div>
       <div class="credits">

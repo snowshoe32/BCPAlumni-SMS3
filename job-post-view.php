@@ -228,6 +228,10 @@ if ($result) {
         <i class="bi bi-circle"></i><span>News & Announcements</span>
       </a>
     </li>
+    <li>
+    <a href="alumni_benefits.php">
+    <i class="bi bi-circle"></i><span>Alumni Benefits</span>
+    </li>
   
   </ul>
 </li>
@@ -266,8 +270,9 @@ if ($result) {
       <h1>Add Alumni Events</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Add Alumni Events</li>
+          <li class="breadcrumb-item"><a href="admin_dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Career Opportunities</li>
+          <li class="breadcrumb-item active">View Job Posting</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
